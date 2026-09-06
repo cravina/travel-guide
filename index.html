@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>TrailSync</title>
+  <meta name="theme-color" content="#1E4238" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <!-- Embedded Web Manifest via Data URI -->
+  <link rel="manifest" id="manifest-placeholder" />
+
+  <!-- Tailwind CSS & React Bundles via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    /* Hide scrollbars for cleaner native look */
+    ::-webkit-scrollbar { width: 0px; background: transparent; }
+  </style>
+</head>
+<body class="bg-[#E5E9E2] text-slate-900 font-sans antialiased">
+  <div id="root"></div>
+
+  <!-- Register Dynamic Manifest & Embedded Service Worker -->
+  <script>
+    // 1. Dynamic manifest with standalone display
+    const manifest = {
+      name: "TrailSync Itinerary Guide",
+      short_name: "TrailSync",
+      start_url: "./index.html",
+      display: "standalone",
+      background_color: "#F4F6F0",
+      theme_color: "#1E4238",
+      icons: [
+        {
+          src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%231E4238'/><polygon points='20,75 50,25 80,75' fill='%23EBF4EE'/></svg>",
+          sizes: "192x192 512x512",
+          type: "image/svg+xml",
+          purpose: "any maskable"
+        }
+      ]
+    };
+    const stringManifest = JSON.stringify(manifest);
+    const blobManifest = new Blob([stringManifest], {type: 'application/json'});
+    document.getElementById('manifest-placeholder').setAttribute('href', URL.createObjectURL(blobManifest));
+
+    // 2. Register Service Worker from Blob for offline caching
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        const CACHE_NAME = 'trailsync-cache-v1';
+        self.addEventListener('install', (e) => {
+          self.skipWaiting();
+        });
+        self.addEventListener('activate', (e) => {
+          e.waitUntil(clients.claim());
+        });
+        self.addEventListener('fetch', (e) => {
+          e.respondWith(
+            caches.match(e.request).then((res) => res || fetch(e.request).then((fetchRes) => {
+              return caches.open(CACHE_NAME).then((cache) => {
+                if (e.request.method === 'GET' && e.request.url.startsWith('http')) {
+                  cache.put(e.request, fetchRes.clone());
+                }
+                return fetchRes;
+              });
+            })).catch(() => caches.match('./index.html'))
+          );
+        });
+      `;
+      const blobSW = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(blobSW))
+        .then(() => console.log('Offline SW registered'))
+        .catch((err) => console.log('SW registration error:', err));
+    }
+  </script>
+
+  <!-- React Application -->
+  <script type="text/babel">
+    const { useState, useMemo, useEffect, useRef } = React;
+
+    // Time & Solar Helpers
+    const toMinutes = (t) => {
+      if (!t) return 0;
+      const [h, m] = t.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+
+    const toTimeString = (min) => {
+      const norm = ((min % 1440) + 1440) % 1440;
+      const h = Math.floor(norm / 60);
+      const m = norm % 60;
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    };
+
+    const formatTime12h = (min) => {
+      const norm = ((min % 1440) + 1440) % 1440;
+      const h = Math.floor(norm / 60);
+      const m = norm % 60;
+      const p = h >= 12 ? 'PM' : 'AM';
+      return `${h % 12 === 0 ? 12 : h % 12}:${m.toString().padStart(2, '0')} ${p}`;
+    };
+
+    const formatDurationWords = (min) => {
+      if (min <= 0) return '0 min';
+      const h = Math.floor(min / 60);
+      const m = min % 60;
+      return h === 0 ? `${m}m` : `${h}h ${m > 0 ? `${m}m` : ''}`.trim();
+    };
+
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r?\n/);
+      if (lines.length < 2) return [];
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
+      return lines.slice(1).map(line => {
+        const row = [];
+        let insideQuote = false, entry = '';
+        for (let i = 0; i < line.length; i++) {
+          const c = line[i];
+          if (c === '"') insideQuote = !insideQuote;
+          else if (c === ',' && !insideQuote) { row.push(entry.trim().replace(/^["']|["']$/g, '')); entry = ''; }
+          else entry += c;
+        }
+        row.push(entry.trim().replace(/^["']|["']$/g, ''));
+        const obj = {};
+        headers.forEach((hdr, idx) => { obj[hdr] = row[idx] || ''; });
+        return obj;
+      });
+    }
+
+    const INITIAL_DATA = [
+      { id: '1', date: '2025-09-23', destination: 'The Bivvi Hostel Telluride', arrivalTime: '07:00', departTime: '07:05', travelMinutes: 0, activityType: 'lodging', notes: 'Depart via CO-62' },
+      { id: '2', date: '2025-09-23', destination: 'Dallas Divide Summit', arrivalTime: '07:23', departTime: '07:45', travelMinutes: 18, activityType: 'sightseeing', notes: 'Prime morning golden light' },
+      { id: '3', date: '2025-09-23', destination: 'Historic Ouray Main St', arrivalTime: '08:15', departTime: '09:00', travelMinutes: 30, activityType: 'food', notes: 'Coffee & pastries' }
+    ];
+
+    function App() {
+      const [itinerary, setItinerary] = useState(() => {
+        try {
+          const c = localStorage.getItem('trailsync_data');
+          return c ? JSON.parse(c) : INITIAL_DATA;
+        } catch { return INITIAL_DATA; }
+      });
+
+      const [sheetUrl, setSheetUrl] = useState(() => 
+        localStorage.getItem('trailsync_url') || 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnbvJS7yfpExgR8hWefk4FJWaeRyh52q03uZs7hopOvFnsJoveg8O_FUYPABojI9Fn0bjRSySwdoyY/pub?gid=1559519314&single=true&output=csv'
+      );
+
+      const [selectedDate, setSelectedDate] = useState('2025-09-23');
+      const [view, setView] = useState('itinerary');
+      const [syncMsg, setSyncMsg] = useState('');
+      const fileInputRef = useRef(null);
+
+      useEffect(() => {
+        localStorage.setItem('trailsync_data', JSON.stringify(itinerary));
+      }, [itinerary]);
+
+      useEffect(() => {
+        localStorage.setItem('trailsync_url', sheetUrl);
+      }, [sheetUrl]);
+
+      const currentStops = useMemo(() => 
+        itinerary.filter(i => i.date === selectedDate).sort((a,b) => toMinutes(a.arrivalTime) - toMinutes(b.arrivalTime)),
+        [itinerary, selectedDate]
+      );
+
+      const handleSync = async () => {
+        setSyncMsg('Fetching sheet...');
+        try {
+          const res = await fetch(sheetUrl);
+          const txt = await res.text();
+          const rows = parseCSV(txt);
+          const formatted = rows.map((r, i) => ({
+            id: r.id || `stop-${i}`,
+            date: r.date || selectedDate,
+            destination: r.destination || r.title || 'Stop',
+            arrivalTime: r.arrivaltime || '08:00',
+            departTime: r.departtime || '08:45',
+            travelMinutes: parseInt(r.travelminutes || '0', 10) || 0,
+            activityType: r.activitytype || 'sightseeing',
+            notes: r.notes || ''
+          }));
+          if (formatted.length > 0) {
+            setItinerary(formatted);
+            setSelectedDate(formatted[0].date);
+            setSyncMsg(`Synced ${formatted.length} stops!`);
+          }
+        } catch (e) {
+          setSyncMsg('Sync error. Check public sheet URL.');
+        }
+      };
+
+      const handleExport = () => {
+        const blob = new Blob([JSON.stringify(itinerary, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `itinerary-backup.json`;
+        a.click();
+      };
+
+      return (
+        <div className="flex justify-center min-h-screen">
+          <div className="w-full max-w-md bg-[#F4F6F0] min-h-screen flex flex-col relative shadow-xl pb-20">
+            {/* Header */}
+            <div className="p-4 bg-[#1E4238] text-white">
+              <div className="flex justify-between items-center">
+                <h1 className="font-bold text-lg">TrailSync Guide</h1>
+                <button onClick={handleExport} className="text-xs bg-white/20 px-2 py-1 rounded">Backup</button>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs text-emerald-100">
+                <span>{selectedDate}</span>
+                <span>{currentStops.length} Stops</span>
+              </div>
+            </div>
+
+            {/* Sync URL Box */}
+            <div className="p-3 bg-white border-b space-y-1">
+              <input 
+                type="text" 
+                value={sheetUrl} 
+                onChange={(e) => setSheetUrl(e.target.value)} 
+                className="w-full text-xs p-1.5 border rounded"
+                placeholder="Google Sheet CSV link"
+              />
+              <div className="flex gap-2">
+                <button onClick={handleSync} className="flex-1 py-1.5 bg-[#234E42] text-white text-xs font-bold rounded">
+                  Sync Google Sheet
+                </button>
+                <button onClick={() => fileInputRef.current.click()} className="px-3 py-1.5 border text-xs font-bold rounded">
+                  Upload
+                </button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  accept=".csv,.json" 
+                  className="hidden" 
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                      if (file.name.endsWith('.json')) {
+                        setItinerary(JSON.parse(evt.target.result));
+                      } else {
+                        const rows = parseCSV(evt.target.result);
+                        setItinerary(rows.map((r, i) => ({
+                          id: `up-${i}`,
+                          date: r.date || selectedDate,
+                          destination: r.destination || 'Stop',
+                          arrivalTime: r.arrivaltime || '08:00',
+                          departTime: r.departtime || '08:45',
+                          travelMinutes: parseInt(r.travelminutes || '0', 10) || 0,
+                          activityType: r.activitytype || 'sightseeing',
+                          notes: r.notes || ''
+                        })));
+                      }
+                    };
+                    reader.readAsText(file);
+                  }}
+                />
+              </div>
+              {syncMsg && <p className="text-[10px] text-emerald-800 font-semibold">{syncMsg}</p>}
+            </div>
+
+            {/* View Selector */}
+            <div className="flex border-b bg-white text-xs font-bold">
+              <button onClick={() => setView('itinerary')} className={`flex-1 py-2 ${view === 'itinerary' ? 'border-b-2 border-[#234E42] text-[#234E42]' : 'text-slate-400'}`}>Cards</button>
+              <button onClick={() => setView('gantt')} className={`flex-1 py-2 ${view === 'gantt' ? 'border-b-2 border-[#234E42] text-[#234E42]' : 'text-slate-400'}`}>Timeline</button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 flex-1 overflow-y-auto space-y-3">
+              {view === 'itinerary' ? (
+                currentStops.map((stop) => (
+                  <div key={stop.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                    <div className="flex justify-between text-xs text-slate-500 font-semibold">
+                      <span>{formatTime12h(toMinutes(stop.arrivalTime))} – {formatTime12h(toMinutes(stop.departTime))}</span>
+                      <span className="uppercase text-[10px] px-1.5 py-0.5 bg-emerald-50 text-[#1E4238] rounded">{stop.activityType}</span>
+                    </div>
+                    <h3 className="font-bold text-slate-900 mt-1">{stop.destination}</h3>
+                    {stop.notes && <p className="text-xs text-slate-600 mt-1">{stop.notes}</p>}
+                  </div>
+                ))
+              ) : (
+                <div className="relative bg-white p-4 rounded-xl border min-h-[400px]">
+                  {currentStops.map((stop) => {
+                    const start = toMinutes(stop.arrivalTime);
+                    const end = toMinutes(stop.departTime);
+                    const top = ((start - 360) / 720) * 100;
+                    const height = Math.max(8, ((end - start) / 720) * 100);
+                    return (
+                      <div 
+                        key={stop.id} 
+                        className="absolute left-4 right-4 bg-[#EBF4EE] border border-[#234E42] rounded p-1 text-xs"
+                        style={{ top: `${Math.max(0, top)}%`, height: `${height}%` }}
+                      >
+                        <span className="font-bold text-[#1E4238] block truncate">{stop.destination}</span>
+                        <span className="text-[10px] text-slate-600">{formatTime12h(start)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
