@@ -32,14 +32,13 @@ import {
   Trash2
 } from 'lucide-react';
 
-// Bed SVG Icon for lodging
 const BedIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth={2}
     strokeLinecap="round"
     strokeLinejoin="round"
   >
@@ -127,7 +126,7 @@ const getTransitMeta = (mode = 'drive') => {
 const INITIAL_DATA: ItineraryStop[] = [
   {
     id: 'stop-1',
-    date: '2025-09-23',
+    date: '2026-09-23',
     destination: 'The Bivvi Hostel Telluride',
     address: 'Telluride, CO',
     arrivalTime: '07:00',
@@ -136,8 +135,8 @@ const INITIAL_DATA: ItineraryStop[] = [
     travelMode: 'drive',
     activityType: 'lodging',
     notes: 'Sunrise 6:23 AM. Check out, load vehicle, depart east via CO-62.',
-    insights: ['Expedited self-checkout available at front kiosk', 'Fill water bottles'],
-    tags: ['Lodging', 'Check Out', 'Prep'],
+    insights: ['Expedited self-checkout available at front kiosk'],
+    tags: ['Lodging'],
     image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=400&q=80',
     hardTime: 'departure',
     lat: 37.9375,
@@ -145,8 +144,8 @@ const INITIAL_DATA: ItineraryStop[] = [
   },
   {
     id: 'stop-2',
-    date: '2025-09-23',
-    destination: 'Dallas Divide Summit Overlook',
+    date: '2026-09-23',
+    destination: 'Dallas Divide Summit Overlook (CO-62)',
     address: 'CO-62, Telluride, CO',
     arrivalTime: '07:23',
     departTime: '07:33',
@@ -155,7 +154,7 @@ const INITIAL_DATA: ItineraryStop[] = [
     activityType: 'sightseeing',
     notes: 'Classic panoramic photo stop; view Mount Sneffels range and golden fall aspens.',
     insights: ['Prime golden morning light hits Mount Sneffels (7:00–9:00 AM)'],
-    tags: ['Scenic View', 'Photo Stop', 'Roadside'],
+    tags: ['Scenic View'],
     image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80',
     hardTime: 'arrival',
     lat: 38.0833,
@@ -163,8 +162,8 @@ const INITIAL_DATA: ItineraryStop[] = [
   },
   {
     id: 'stop-3',
-    date: '2025-09-23',
-    destination: 'Historic Main Street (Ouray)',
+    date: '2026-09-23',
+    destination: 'Ouray, CO - Historic Main Street',
     address: 'Main St, Ouray, CO',
     arrivalTime: '08:01',
     departTime: '08:40',
@@ -173,7 +172,7 @@ const INITIAL_DATA: ItineraryStop[] = [
     activityType: 'food',
     notes: 'Stroll Victorian district; grab morning coffee and artisan pastries.',
     insights: ['Artisan Bakery opens early at 7:00 AM'],
-    tags: ['Breakfast', 'Victorian Town', 'Coffee'],
+    tags: ['Food', 'Coffee'],
     image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=400&q=80',
     hardTime: 'none',
     lat: 38.0228,
@@ -181,40 +180,22 @@ const INITIAL_DATA: ItineraryStop[] = [
   },
   {
     id: 'stop-4',
-    date: '2025-09-24',
-    destination: 'Ouray Hot Springs Pool',
+    date: '2026-09-23',
+    destination: 'Box Cañon Falls Park (Ouray)',
     address: 'Ouray, CO',
-    arrivalTime: '07:30',
-    departTime: '08:15',
-    travelMinutes: 0,
-    travelMode: 'drive',
-    activityType: 'lodging',
-    notes: 'Morning thermal mineral pool soak with views of Mount Abrams.',
-    insights: ['Lockers available with admission wristband'],
-    tags: ['Hot Springs', 'Thermal', 'Morning'],
-    image: 'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=400&q=80',
-    hardTime: 'departure',
-    lat: 38.025,
-    lng: -107.672,
-  },
-  {
-    id: 'stop-5',
-    date: '2025-09-25',
-    destination: 'Telluride Free Gondola',
-    address: 'San Juan Ave, Telluride, CO',
-    arrivalTime: '09:00',
+    arrivalTime: '08:45',
     departTime: '09:45',
-    travelMinutes: 0,
+    travelMinutes: 5,
     travelMode: 'drive',
-    activityType: 'sightseeing',
-    notes: 'Scenic aerial gondola ride across the mountain ridge to Mountain Village.',
-    insights: ['Free pet-friendly gondola cars available in cycle'],
-    tags: ['Gondola', 'Views', 'Telluride'],
-    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
+    activityType: 'hiking',
+    notes: 'Walk suspended metal walkway into 285-ft canyon waterfall; High Bridge overlook.',
+    insights: ['Admission accepted at visitor center'],
+    tags: ['Waterfall', 'Hike'],
+    image: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=400&q=80',
     hardTime: 'none',
-    lat: 37.936,
-    lng: -107.815,
-  },
+    lat: 38.0195,
+    lng: -107.6784,
+  }
 ];
 
 const toMinutes = (timeStr: string): number => {
@@ -257,6 +238,64 @@ const formatDateDisplay = (dateStr: string): string => {
   }
 };
 
+// Flexible Time normalizer: Converts "7:00 AM", "07:23 AM", "14:30", "7:00" -> "07:00" (24h)
+const normalizeTimeTo24h = (raw: string, fallback = '08:00'): string => {
+  if (!raw || typeof raw !== 'string') return fallback;
+  const str = raw.trim().toUpperCase();
+
+  const ampmMatch = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
+  if (ampmMatch) {
+    let hours = parseInt(ampmMatch[1], 10);
+    const minutes = ampmMatch[2];
+    const isPM = ampmMatch[3].toUpperCase() === 'PM';
+    if (isPM && hours < 12) hours += 12;
+    if (!isPM && hours === 12) hours = 0;
+    return `${hours.toString().padStart(2, '0')}:${minutes}`;
+  }
+
+  const standardMatch = str.match(/^(\d{1,2}):(\d{2})/);
+  if (standardMatch) {
+    const hours = parseInt(standardMatch[1], 10);
+    const minutes = standardMatch[2];
+    return `${hours.toString().padStart(2, '0')}:${minutes}`;
+  }
+
+  return fallback;
+};
+
+// Flexible duration parser: Handles "0:18", "1:00", "18", "18m", "18 min" -> returns minutes
+const parseFlexibleMinutes = (raw: string): number => {
+  if (!raw) return 0;
+  const str = raw.toString().trim();
+  if (str.includes(':')) {
+    const [h, m] = str.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  }
+  const num = parseInt(str.replace(/[^0-9]/g, ''), 10);
+  return isNaN(num) ? 0 : num;
+};
+
+// Converts "Wed 9/23", "9/23", or "2026-09-23" -> ISO "2026-09-23"
+const normalizeDateToISO = (raw: string, fallbackYear = 2026): string => {
+  if (!raw) return `${fallbackYear}-09-23`;
+  const str = raw.trim();
+
+  const isoMatch = str.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return isoMatch[0];
+
+  const slashMatch = str.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+  if (slashMatch) {
+    const month = parseInt(slashMatch[1], 10).toString().padStart(2, '0');
+    const day = parseInt(slashMatch[2], 10).toString().padStart(2, '0');
+    let year = slashMatch[3] ? parseInt(slashMatch[3], 10) : fallbackYear;
+    if (year < 100) year += 2000;
+    return `${year}-${month}-${day}`;
+  }
+
+  return `${fallbackYear}-09-23`;
+};
+
+// NOAA Solar Calculation
 function calculateSolarTimes(dateStr: string, lat = 38.0, lng = -107.7): { sunrise: string; sunset: string; sunriseMin: number; sunsetMin: number } {
   try {
     const [year, month, day] = dateStr.split('-').map(Number);
@@ -297,6 +336,7 @@ function calculateSolarTimes(dateStr: string, lat = 38.0, lng = -107.7): { sunri
   }
 }
 
+// Robust CSV Line Parser
 function parseCSV(text: string): Record<string, string>[] {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
@@ -314,7 +354,7 @@ function parseCSV(text: string): Record<string, string>[] {
 
     for (let charIdx = 0; charIdx < rawLine.length; charIdx++) {
       const c = rawLine[charIdx];
-      if (c === '"' || c === "'") {
+      if (c === '"') {
         insideQuote = !insideQuote;
       } else if (c === ',' && !insideQuote) {
         row.push(entry.trim().replace(/^["']|["']$/g, ''));
@@ -394,14 +434,14 @@ export default function App() {
 
   const tripDates = useMemo(() => {
     const dates = Array.from(new Set(itinerary.map((it) => it.date))).sort();
-    return dates.length > 0 ? dates : ['2025-09-23'];
+    return dates.length > 0 ? dates : ['2026-09-23'];
   }, [itinerary]);
 
   const [selectedDate, setSelectedDate] = useState<string>(() => tripDates[0]);
 
   useEffect(() => {
     if (!tripDates.includes(selectedDate)) {
-      setSelectedDate(tripDates[0] || '2025-09-23');
+      setSelectedDate(tripDates[0] || '2026-09-23');
     }
   }, [tripDates, selectedDate]);
 
@@ -627,39 +667,82 @@ export default function App() {
     return [...otherDays, ...updatedDayItems];
   };
 
+  // Explicit Google Sheets Parsing
   const handleIngestRows = (rows: Record<string, string>[]) => {
-    const formatted: ItineraryStop[] = rows.map((r, idx) => {
-      const arr = r.arrivaltime || r.arrival || r.start || '08:00';
-      const dep = r.departtime || r.departure || r.depart || r.end || '08:45';
-      const act = (r.activitytype || r.type || 'sightseeing').toLowerCase() as any;
-      const mode = (r.travelmode || r.mode || 'drive').toLowerCase() as any;
+    let lastValidDate = '2026-09-23';
 
-      return {
-        id: r.id || `ingest-${idx}-${Date.now()}`,
-        date: r.date || r.day || selectedDate,
-        destination: r.destination || r.title || r.location || 'Waypoint',
-        address: r.address || '',
-        arrivalTime: arr.length === 5 ? arr : '08:00',
-        departTime: dep.length === 5 ? dep : '08:45',
-        travelMinutes: parseInt(r.travelminutes || r.traveltime || '0', 10) || 0,
-        travelMode: ['drive', 'hike', 'bike', 'fly'].includes(mode) ? mode : 'drive',
-        activityType: ['lodging', 'sightseeing', 'hiking', 'food', 'driving'].includes(act) ? act : 'sightseeing',
-        notes: r.notes || r.description || '',
-        insights: r.insights ? r.insights.split('|').map((s) => s.trim()) : [],
-        tags: r.tags ? r.tags.split(',').map((s) => s.trim()) : [],
-        image: r.image || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80',
-        hardTime: (r.hardtime || 'none') as any,
-        lat: parseFloat(r.lat || r.latitude || '0') || undefined,
-        lng: parseFloat(r.lng || r.longitude || '0') || undefined,
-      };
-    });
+    const formatted: ItineraryStop[] = rows
+      .filter((r) => r.destination || r.location || r.stop)
+      .map((r, idx) => {
+        const destination = (r.destination || r.location || r.stop || `Stop ${idx + 1}`).trim();
+        const address = (r.address || r.location || destination).trim();
+
+        const rawDate = r.date || r.day || '';
+        if (rawDate) {
+          lastValidDate = normalizeDateToISO(rawDate);
+        }
+        const date = lastValidDate;
+
+        const rawArr = r.arrivaltime || r.arrive || r.arrival || r.start || '08:00';
+        const rawDep = r.departtime || r.depart || r.departure || r.end || '';
+        const arrive = normalizeTimeTo24h(rawArr, '08:00');
+        let depart = normalizeTimeTo24h(rawDep, '');
+
+        const timeSpentMin = parseFlexibleMinutes(r.timespent || r.duration);
+        if (!depart || depart === arrive) {
+          const arrMin = toMinutes(arrive);
+          depart = toTimeString(arrMin + (timeSpentMin > 0 ? timeSpentMin : 30));
+        }
+
+        const travelMinutes = parseFlexibleMinutes(r.travelminutes || r.drive || r.traveltime);
+
+        const modeVal = (r.travelmode || r.mode || 'drive').toLowerCase();
+        const travelMode = ['drive', 'hike', 'bike', 'fly'].includes(modeVal) ? (modeVal as any) : 'drive';
+
+        const rawType = (r.activitytype || r.type || '').toLowerCase();
+        let activityType: 'lodging' | 'sightseeing' | 'hiking' | 'food' | 'driving' = 'sightseeing';
+        const combinedContext = (destination + ' ' + (r.notes || '')).toLowerCase();
+
+        if (['lodging', 'sightseeing', 'hiking', 'food', 'driving'].includes(rawType)) {
+          activityType = rawType as any;
+        } else if (combinedContext.includes('hostel') || combinedContext.includes('hotel') || combinedContext.includes('pool') || combinedContext.includes('hot springs')) {
+          activityType = 'lodging';
+        } else if (combinedContext.includes('falls') || combinedContext.includes('park') || combinedContext.includes('trail') || combinedContext.includes('hike')) {
+          activityType = 'hiking';
+        } else if (combinedContext.includes('street') || combinedContext.includes('coffee') || combinedContext.includes('pastries') || combinedContext.includes('bakery') || combinedContext.includes('food')) {
+          activityType = 'food';
+        }
+
+        const notes = r.notes || r.description || '';
+        const rawInsights = r.insights || r.highlights || '';
+        const insights = rawInsights ? rawInsights.split(/[|;]/).map((s) => s.trim()) : [];
+
+        return {
+          id: r.id || `sheet-${idx}-${Date.now()}`,
+          date,
+          destination,
+          address,
+          arrivalTime: arrive,
+          departTime: depart,
+          travelMinutes,
+          travelMode,
+          activityType,
+          notes,
+          insights,
+          tags: [activityType.toUpperCase()],
+          image: r.image || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80',
+          hardTime: (r.hardtime || 'none') as any,
+          lat: parseFloat(r.lat || r.latitude || '0') || undefined,
+          lng: parseFloat(r.lng || r.longitude || '0') || undefined,
+        };
+      });
 
     if (formatted.length > 0) {
       setItinerary(formatted);
       setSelectedDate(formatted[0].date);
       setSyncStatus(`Successfully loaded ${formatted.length} stops!`);
     } else {
-      setSyncStatus('No valid data entries discovered in source.');
+      setSyncStatus('No valid stops found in the provided sheet data.');
     }
   };
 
@@ -751,7 +834,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Header */}
+        {/* Top Header */}
         <div className="px-5 pt-2 pb-3 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2.5">
@@ -766,14 +849,14 @@ export default function App() {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowSyncModal(true)}
-                className="w-8 h-8 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-700 transition shadow-2xs"
+                className="w-8 h-8 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-700 transition shadow-2xs cursor-pointer"
                 title="Sync Google Sheets / Upload"
               >
                 <RefreshCw className="w-4 h-4 text-[#234E42]" />
               </button>
               <button
                 onClick={() => setShowSettingsModal(true)}
-                className="w-8 h-8 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition shadow-2xs"
+                className="w-8 h-8 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition shadow-2xs cursor-pointer"
                 title="Settings & Export"
               >
                 <Settings className="w-4 h-4" />
@@ -796,14 +879,14 @@ export default function App() {
                 if (idx > 0) setSelectedDate(tripDates[idx - 1]);
               }}
               disabled={selectedDate === tripDates[0]}
-              className="w-9 h-12 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-40 flex items-center justify-center text-slate-700 shadow-2xs transition shrink-0"
+              className="w-9 h-12 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-40 flex items-center justify-center text-slate-700 shadow-2xs transition shrink-0 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
 
             <button
               onClick={() => setShowCalendarPicker(true)}
-              className="flex-1 h-12 bg-white rounded-2xl border border-slate-200 px-3.5 flex items-center justify-between text-left hover:border-[#234E42]/50 transition shadow-2xs"
+              className="flex-1 h-12 bg-white rounded-2xl border border-slate-200 px-3.5 flex items-center justify-between text-left hover:border-[#234E42]/50 transition shadow-2xs cursor-pointer"
             >
               <div>
                 <span className="text-xs font-bold text-slate-900 block leading-tight">{currentSun.label}</span>
@@ -832,7 +915,7 @@ export default function App() {
                 if (idx < tripDates.length - 1) setSelectedDate(tripDates[idx + 1]);
               }}
               disabled={selectedDate === tripDates[tripDates.length - 1]}
-              className="w-9 h-12 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-40 flex items-center justify-center text-slate-700 shadow-2xs transition shrink-0"
+              className="w-9 h-12 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-40 flex items-center justify-center text-slate-700 shadow-2xs transition shrink-0 cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -844,7 +927,7 @@ export default function App() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`py-2 rounded-xl text-xs font-bold capitalize transition-all ${
+                className={`py-2 rounded-xl text-xs font-bold capitalize transition-all cursor-pointer ${
                   activeTab === tab
                     ? 'bg-[#234E42] text-white shadow-md shadow-[#234E42]/20'
                     : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -856,7 +939,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Overlap Banner */}
+        {/* Schedule Overlap Banner */}
         {overlaps.length > 0 && (
           <div className="mx-4 mb-2 bg-rose-50 border border-rose-200 rounded-2xl p-2.5 flex items-center justify-between text-xs text-rose-800 shadow-xs">
             <div className="flex items-center space-x-2 min-w-0">
@@ -877,14 +960,14 @@ export default function App() {
                 const resolved = { ...c.itemB, arrivalTime: toTimeString(newArr), departTime: toTimeString(newArr + dur) };
                 setItinerary((prev) => cascadeSchedule(resolved, prev));
               }}
-              className="ml-2 px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-[11px] shrink-0 transition"
+              className="ml-2 px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-[11px] shrink-0 transition cursor-pointer"
             >
               Auto Shift
             </button>
           </div>
         )}
 
-        {/* Main Content Area */}
+        {/* Scrollable View Area */}
         <div className="flex-1 overflow-y-auto relative bg-[#F4F6F0] px-4 pb-24">
           {activeTab === 'itinerary' && (
             <div className="space-y-1.5 pt-1">
@@ -1035,7 +1118,7 @@ export default function App() {
             </div>
           )}
 
-          {/* Summary View */}
+          {/* Summary Tab */}
           {activeTab === 'summary' && (
             <div className="pt-2 space-y-4">
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
@@ -1043,7 +1126,7 @@ export default function App() {
                   <h3 className="font-bold text-slate-900 text-sm">{currentSun.label} Driving & Activity Metrics</h3>
                   <button
                     onClick={() => setShowSunEditModal(true)}
-                    className="text-[11px] font-bold text-[#234E42] hover:underline"
+                    className="text-[11px] font-bold text-[#234E42] hover:underline cursor-pointer"
                   >
                     Adjust Sun Times
                   </button>
@@ -1093,7 +1176,7 @@ export default function App() {
             });
             setIsAddMode(true);
           }}
-          className="absolute right-4 bottom-16 z-30 w-12 h-12 rounded-full bg-[#234E42] text-white shadow-xl hover:bg-[#1B3E34] active:scale-95 transition-all flex items-center justify-center border-2 border-white"
+          className="absolute right-4 bottom-16 z-30 w-12 h-12 rounded-full bg-[#234E42] text-white shadow-xl hover:bg-[#1B3E34] active:scale-95 transition-all flex items-center justify-center border-2 border-white cursor-pointer"
         >
           <Plus className="w-6 h-6" />
         </button>
@@ -1102,28 +1185,28 @@ export default function App() {
         <div className="bg-white border-t border-slate-200 px-6 py-2 flex items-center justify-around shrink-0 z-20">
           <button
             onClick={() => setActiveTab('itinerary')}
-            className={`flex flex-col items-center space-y-1 ${activeTab === 'itinerary' ? 'text-[#234E42] font-bold' : 'text-slate-400'}`}
+            className={`flex flex-col items-center space-y-1 cursor-pointer ${activeTab === 'itinerary' ? 'text-[#234E42] font-bold' : 'text-slate-400'}`}
           >
             <List className="w-5 h-5" />
             <span className="text-[10px]">Itinerary</span>
           </button>
           <button
             onClick={() => setActiveTab('gantt')}
-            className={`flex flex-col items-center space-y-1 ${activeTab === 'gantt' ? 'text-[#234E42] font-bold' : 'text-slate-400'}`}
+            className={`flex flex-col items-center space-y-1 cursor-pointer ${activeTab === 'gantt' ? 'text-[#234E42] font-bold' : 'text-slate-400'}`}
           >
             <Layers className="w-5 h-5" />
             <span className="text-[10px]">Timeline</span>
           </button>
           <button
             onClick={() => setActiveTab('summary')}
-            className={`flex flex-col items-center space-y-1 ${activeTab === 'summary' ? 'text-[#234E42] font-bold' : 'text-slate-400'}`}
+            className={`flex flex-col items-center space-y-1 cursor-pointer ${activeTab === 'summary' ? 'text-[#234E42] font-bold' : 'text-slate-400'}`}
           >
             <BarChart2 className="w-5 h-5" />
             <span className="text-[10px]">Summary</span>
           </button>
           <button
             onClick={() => setShowSyncModal(true)}
-            className="flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-600"
+            className="flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-600 cursor-pointer"
           >
             <RefreshCw className="w-5 h-5" />
             <span className="text-[10px]">Sync</span>
@@ -1139,7 +1222,7 @@ export default function App() {
                   <FileSpreadsheet className="w-5 h-5 text-[#234E42]" />
                   <h3 className="font-bold text-slate-900 text-sm">Ingest & Sync Data</h3>
                 </div>
-                <button onClick={() => setShowSyncModal(false)} className="p-1 text-slate-500">
+                <button onClick={() => setShowSyncModal(false)} className="p-1 text-slate-500 cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -1156,7 +1239,7 @@ export default function App() {
                 <button
                   onClick={handleSyncUrl}
                   disabled={isSyncing}
-                  className="w-full mt-2 py-2.5 bg-[#234E42] text-white rounded-xl font-bold text-xs flex items-center justify-center space-x-2 disabled:opacity-50"
+                  className="w-full mt-2 py-2.5 bg-[#234E42] text-white rounded-xl font-bold text-xs flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
                 >
                   <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                   <span>{isSyncing ? 'Downloading Sheet...' : 'Sync From Published Sheet'}</span>
@@ -1168,14 +1251,14 @@ export default function App() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="py-2.5 px-3 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-center space-x-1.5"
+                    className="py-2.5 px-3 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-center space-x-1.5 cursor-pointer"
                   >
                     <Upload className="w-4 h-4 text-[#234E42]" />
                     <span>Import File</span>
                   </button>
                   <button
                     onClick={handleExportBackup}
-                    className="py-2.5 px-3 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-center space-x-1.5"
+                    className="py-2.5 px-3 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-center space-x-1.5 cursor-pointer"
                   >
                     <Download className="w-4 h-4 text-emerald-700" />
                     <span>Export JSON</span>
@@ -1192,7 +1275,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Solar Time Edit Modal */}
+        {/* Solar Times Modal */}
         {showSunEditModal && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
             <div className="bg-white w-full max-w-xs rounded-2xl p-4 space-y-3">
@@ -1218,7 +1301,7 @@ export default function App() {
               <div className="flex space-x-2 pt-2">
                 <button
                   onClick={() => setShowSunEditModal(false)}
-                  className="flex-1 py-1.5 border border-slate-300 text-xs rounded-lg font-bold text-slate-600"
+                  className="flex-1 py-1.5 border border-slate-300 text-xs rounded-lg font-bold text-slate-600 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1241,7 +1324,7 @@ export default function App() {
                     }));
                     setShowSunEditModal(false);
                   }}
-                  className="flex-1 py-1.5 bg-[#234E42] text-white text-xs rounded-lg font-bold"
+                  className="flex-1 py-1.5 bg-[#234E42] text-white text-xs rounded-lg font-bold cursor-pointer"
                 >
                   Save
                 </button>
@@ -1256,7 +1339,7 @@ export default function App() {
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 max-h-[90vh] overflow-y-auto space-y-4 text-xs">
               <div className="flex justify-between items-center pb-2 border-b border-slate-200">
                 <h3 className="font-bold text-sm text-slate-900">{isAddMode ? 'Add Stop' : 'Edit Stop'}</h3>
-                <button onClick={() => setEditingItem(null)}><X className="w-5 h-5 text-slate-500" /></button>
+                <button onClick={() => setEditingItem(null)} className="cursor-pointer"><X className="w-5 h-5 text-slate-500" /></button>
               </div>
 
               <div>
@@ -1294,7 +1377,7 @@ export default function App() {
               <div className="flex space-x-2 pt-2">
                 <button
                   onClick={() => setEditingItem(null)}
-                  className="flex-1 py-2.5 border rounded-xl font-bold text-slate-600"
+                  className="flex-1 py-2.5 border rounded-xl font-bold text-slate-600 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1308,7 +1391,7 @@ export default function App() {
                     }
                     setEditingItem(null);
                   }}
-                  className="flex-1 py-2.5 bg-[#234E42] text-white rounded-xl font-bold"
+                  className="flex-1 py-2.5 bg-[#234E42] text-white rounded-xl font-bold cursor-pointer"
                 >
                   Save & Ripple
                 </button>
@@ -1317,7 +1400,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Stop Detail Modal */}
+        {/* Selected Item Detail Modal */}
         {selectedItem && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 space-y-3">
@@ -1329,7 +1412,7 @@ export default function App() {
                   <h2 className="text-base font-bold text-slate-900 mt-1">{selectedItem.destination}</h2>
                   <p className="text-xs text-slate-500">{selectedItem.address}</p>
                 </div>
-                <button onClick={() => setSelectedItem(null)}><X className="w-5 h-5 text-slate-500" /></button>
+                <button onClick={() => setSelectedItem(null)} className="cursor-pointer"><X className="w-5 h-5 text-slate-500" /></button>
               </div>
 
               <div className="p-3 bg-slate-50 rounded-xl text-xs flex justify-between">
@@ -1356,7 +1439,7 @@ export default function App() {
                     setIsAddMode(false);
                     setSelectedItem(null);
                   }}
-                  className="flex-1 py-2 bg-[#234E42] text-white rounded-xl font-bold text-xs flex items-center justify-center space-x-1"
+                  className="flex-1 py-2 bg-[#234E42] text-white rounded-xl font-bold text-xs flex items-center justify-center space-x-1 cursor-pointer"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
                   <span>Edit</span>
@@ -1366,7 +1449,7 @@ export default function App() {
                     setItinerary((prev) => prev.filter((it) => it.id !== selectedItem.id));
                     setSelectedItem(null);
                   }}
-                  className="px-4 py-2 border border-rose-200 text-rose-600 rounded-xl font-bold text-xs"
+                  className="px-4 py-2 border border-rose-200 text-rose-600 rounded-xl font-bold text-xs cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -1375,13 +1458,13 @@ export default function App() {
           </div>
         )}
 
-        {/* Date Selector Drawer */}
+        {/* Calendar Drawer */}
         {showCalendarPicker && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 space-y-3">
               <div className="flex justify-between items-center border-b pb-2">
                 <h3 className="font-bold text-sm">Select Trip Day</h3>
-                <button onClick={() => setShowCalendarPicker(false)}><X className="w-5 h-5 text-slate-500" /></button>
+                <button onClick={() => setShowCalendarPicker(false)} className="cursor-pointer"><X className="w-5 h-5 text-slate-500" /></button>
               </div>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {tripDates.map((d) => (
@@ -1391,7 +1474,7 @@ export default function App() {
                       setSelectedDate(d);
                       setShowCalendarPicker(false);
                     }}
-                    className={`w-full p-3 rounded-2xl border text-left flex justify-between items-center text-xs font-bold ${
+                    className={`w-full p-3 rounded-2xl border text-left flex justify-between items-center text-xs font-bold cursor-pointer ${
                       d === selectedDate ? 'bg-[#234E42] text-white' : 'bg-white text-slate-800'
                     }`}
                   >
