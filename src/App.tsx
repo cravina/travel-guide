@@ -29,16 +29,18 @@ import {
   Upload,
   Download,
   FileSpreadsheet,
-  Trash2
+  Trash2,
+  Globe
 } from 'lucide-react';
 
-const BedIcon = (props: React.SVGProps<SVGSVGElement>) => (
+// Bed SVG Icon for lodging
+const BedIcon = (props) => (
   <svg
     {...props}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth={2}
+    strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
   >
@@ -49,34 +51,7 @@ const BedIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export interface ItineraryStop {
-  id: string;
-  date: string;
-  destination: string;
-  address: string;
-  arrivalTime: string;
-  departTime: string;
-  travelMinutes: number;
-  travelMode: 'drive' | 'hike' | 'bike' | 'fly';
-  activityType: 'lodging' | 'sightseeing' | 'hiking' | 'food' | 'driving';
-  notes: string;
-  insights: string[];
-  tags: string[];
-  image: string;
-  hardTime: 'none' | 'arrival' | 'departure';
-  lat?: number;
-  lng?: number;
-}
-
-export interface DaySunData {
-  label: string;
-  sunrise: string;
-  sunset: string;
-  sunriseMin: number;
-  sunsetMin: number;
-  isManual?: boolean;
-}
-
+// Transit Mode Helper
 const getTransitMeta = (mode = 'drive') => {
   switch (mode) {
     case 'hike':
@@ -102,7 +77,7 @@ const getTransitMeta = (mode = 'drive') => {
     case 'fly':
       return {
         id: 'fly',
-        label: 'fly',
+        label: 'flight',
         title: 'Flight',
         icon: Plane,
         color: 'text-indigo-700',
@@ -123,71 +98,370 @@ const getTransitMeta = (mode = 'drive') => {
   }
 };
 
-const INITIAL_DATA: ItineraryStop[] = [
+const INITIAL_DATA = [
+  // Day 1: Travel Day - Florida Departure to Denver Arrival
   {
     id: 'stop-1',
     date: '2026-09-18',
-    destination: 'Home',
-    address: 'Departure Point',
-    arrivalTime: '09:00',
-    departTime: '09:00',
+    destination: 'Palm Bay Home',
+    address: 'Palm Bay, FL',
+    arrivalTime: '08:30',
+    departTime: '08:45',
     travelMinutes: 0,
     travelMode: 'drive',
     activityType: 'lodging',
-    notes: 'Trip begins.',
-    insights: [],
-    tags: ['Departure'],
+    notes: 'Depart home, pack vehicle, proceed north on I-95 towards Orlando airport.',
+    insights: ['Double-check boarding passes and travel IDs'],
+    tags: ['Departure', 'FL'],
     image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=400&q=80',
     hardTime: 'departure',
+    lat: 28.0345,
+    lng: -80.5887,
   },
   {
     id: 'stop-2',
     date: '2026-09-18',
-    destination: 'Park N Go Orlando',
-    address: 'Orlando, FL',
-    arrivalTime: '10:10',
+    destination: 'Park N Go Orlando (MCO)',
+    address: '6101 Cargo Rd, Orlando, FL',
+    arrivalTime: '10:00',
     departTime: '10:30',
-    travelMinutes: 70,
+    travelMinutes: 75,
     travelMode: 'drive',
     activityType: 'driving',
-    notes: 'Airport parking transfer',
-    insights: ['Shuttle transfers to terminal every 5-10 mins'],
-    tags: ['Transit'],
+    notes: 'Check-in vehicle, board terminal shuttle to Gate 3.',
+    insights: ['Shuttle departs every 5 minutes to Terminal B'],
+    tags: ['Airport', 'Transit'],
     image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80',
     hardTime: 'arrival',
+    lat: 28.4312,
+    lng: -81.3081,
   },
   {
     id: 'stop-3',
     date: '2026-09-18',
-    destination: 'Denver International Airport',
-    address: 'Denver, CO',
-    arrivalTime: '15:52',
-    departTime: '16:12',
-    travelMinutes: 144,
+    destination: 'Denver International Airport (DEN)',
+    address: '8500 Peña Blvd, Denver, CO',
+    arrivalTime: '14:50',
+    departTime: '15:45',
+    travelMinutes: 260,
     travelMode: 'fly',
     activityType: 'sightseeing',
-    notes: 'Flight is 4+ hours. Now in MDT timezone.',
-    insights: ['Pick up rental vehicle at concourse shuttle'],
-    tags: ['Arrival', 'MDT'],
+    notes: 'Flight crosses into Mountain Time Zone (MDT). Collect baggage & rental car.',
+    insights: ['MDT is 2 hours behind Eastern Time', 'Car rental shuttle is located on Level 5'],
+    tags: ['Arrival', 'MDT', 'Flight'],
     image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
     hardTime: 'arrival',
-  }
+    lat: 39.8561,
+    lng: -104.6737,
+  },
+  // Day 2: Wed Sep 23 - The San Juan Skyway & Telluride
+  {
+    id: 'stop-4',
+    date: '2026-09-23',
+    destination: 'The Bivvi Hostel Telluride',
+    address: 'CO-145, Placerville, CO',
+    arrivalTime: '07:00',
+    departTime: '07:05',
+    travelMinutes: 0,
+    travelMode: 'drive',
+    activityType: 'lodging',
+    notes: 'Sunrise 6:23 AM MDT. Check out, load vehicle, depart east via CO-62.',
+    insights: [
+      'Expedited self-checkout available at front kiosk',
+      'CO-62 can have morning black ice on north-facing curves'
+    ],
+    tags: ['Lodging', 'Check Out', 'MDT'],
+    image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=400&q=80',
+    hardTime: 'departure',
+    lat: 37.9711,
+    lng: -108.0514,
+  },
+  {
+    id: 'stop-5',
+    date: '2026-09-23',
+    destination: 'Dallas Divide Summit Overlook',
+    address: 'CO-62, Telluride, CO',
+    arrivalTime: '07:23',
+    departTime: '07:33',
+    travelMinutes: 18,
+    travelMode: 'drive',
+    activityType: 'sightseeing',
+    notes: 'Classic panoramic photo stop; view Mount Sneffels range and golden fall aspens.',
+    insights: [
+      'Prime golden morning light hits Mount Sneffels (7:00–9:00 AM)',
+      'Designated paved pullout with room for 15 vehicles'
+    ],
+    tags: ['Scenic View', 'Photo Stop', 'MDT'],
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80',
+    hardTime: 'arrival',
+    lat: 38.0964,
+    lng: -107.8864,
+  },
+  {
+    id: 'stop-6',
+    date: '2026-09-23',
+    destination: 'Historic Main Street (Ouray)',
+    address: 'Main St, Ouray, CO',
+    arrivalTime: '08:01',
+    departTime: '08:40',
+    travelMinutes: 28,
+    travelMode: 'drive',
+    activityType: 'food',
+    notes: 'Stroll Victorian district; grab morning coffee and artisan pastries.',
+    insights: [
+      'Artisan Bakery & Roaster opens early at 7:00 AM',
+      'Free 2-hour diagonal parking along Main Street'
+    ],
+    tags: ['Breakfast', 'Victorian Town', 'Coffee'],
+    image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=400&q=80',
+    hardTime: 'none',
+    lat: 38.0228,
+    lng: -107.6714,
+  },
+  {
+    id: 'stop-7',
+    date: '2026-09-23',
+    destination: 'Box Cañon Falls Park',
+    address: 'Box Canyon Rd, Ouray, CO',
+    arrivalTime: '08:45',
+    departTime: '09:45',
+    travelMinutes: 5,
+    travelMode: 'drive',
+    activityType: 'hiking',
+    notes: 'Walk suspended metal walkway into 285-ft canyon waterfall; High Bridge overlook.',
+    insights: [
+      'Suspended walkway can be wet near spray',
+      'Park admission is $7/adult at visitor center'
+    ],
+    tags: ['Waterfall', 'Walkway', 'Gorge'],
+    image: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=400&q=80',
+    hardTime: 'arrival',
+    lat: 38.0189,
+    lng: -107.6756,
+  },
+  {
+    id: 'stop-8',
+    date: '2026-09-23',
+    destination: 'Cascade Falls Park',
+    address: '8th Ave & 5th St, Ouray, CO',
+    arrivalTime: '09:50',
+    departTime: '10:30',
+    travelMinutes: 5,
+    travelMode: 'hike',
+    activityType: 'hiking',
+    notes: 'Short trail to base of 200-ft falls plunging down red rock amphitheater.',
+    insights: ['Short 10-minute scramble to reach lower pool'],
+    tags: ['Waterfall', 'Short Trail', 'MDT'],
+    image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=400&q=80',
+    hardTime: 'none',
+    lat: 38.0261,
+    lng: -107.6656,
+  },
+  // Day 3: Thu Sep 24 - Million Dollar Highway
+  {
+    id: 'stop-9',
+    date: '2026-09-24',
+    destination: 'Ouray Hot Springs Pool',
+    address: 'Ouray, CO',
+    arrivalTime: '07:30',
+    departTime: '08:15',
+    travelMinutes: 0,
+    travelMode: 'drive',
+    activityType: 'lodging',
+    notes: 'Thermal mineral pool soak with views of Mount Abrams.',
+    insights: ['Lockers available with admission wristband'],
+    tags: ['Hot Springs', 'Thermal'],
+    image: 'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=400&q=80',
+    hardTime: 'departure',
+    lat: 38.0294,
+    lng: -107.6725,
+  },
+  {
+    id: 'stop-10',
+    date: '2026-09-24',
+    destination: 'Million Dollar Highway Overlook',
+    address: 'US-550, Red Mountain Pass, CO',
+    arrivalTime: '08:45',
+    departTime: '09:00',
+    travelMinutes: 30,
+    travelMode: 'drive',
+    activityType: 'sightseeing',
+    notes: 'Breathtaking alpine switchbacks, Idarado mine ruins, and red rock peaks.',
+    insights: ['Elevation 11,018 ft; pullout accommodates 8 cars'],
+    tags: ['Scenic Pass', 'US-550', 'MDT'],
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80',
+    hardTime: 'none',
+    lat: 37.8986,
+    lng: -107.7125,
+  },
+  {
+    id: 'stop-11',
+    date: '2026-09-24',
+    destination: 'Silverton Historic Mining Town',
+    address: 'Blair St, Silverton, CO',
+    arrivalTime: '09:40',
+    departTime: '10:35',
+    travelMinutes: 40,
+    travelMode: 'drive',
+    activityType: 'food',
+    notes: 'Historic mining settlement stroll; grab espresso and pastries.',
+    insights: ['Narrow gauge steam train stops in town at 10:15 AM'],
+    tags: ['Historic Town', 'Mining'],
+    image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=400&q=80',
+    hardTime: 'none',
+    lat: 37.8119,
+    lng: -107.6645,
+  },
 ];
 
-const toMinutes = (timeStr: string): number => {
+// Checks if waypoint or address is located in Mountain Time (MDT)
+const isLocationInMDT = (stopOrAddress) => {
+  if (!stopOrAddress) return false;
+  const str = typeof stopOrAddress === 'string'
+    ? stopOrAddress.toLowerCase()
+    : `${stopOrAddress.destination || ''} ${stopOrAddress.address || ''} ${stopOrAddress.notes || ''} ${(stopOrAddress.tags || []).join(' ')}`.toLowerCase();
+
+  // Keyword markers for Colorado/Mountain time
+  const mdtKeywords = [' co', ', co', 'colorado', 'denver', 'telluride', 'ouray', 'silverton', 'placerville', 'durango', 'sneffels', 'mdt', 'mountain time'];
+  if (mdtKeywords.some((k) => str.includes(k))) return true;
+
+  // Coordinate check (Colorado approx: Lat 37N-41N, Lng 102W-109W)
+  if (typeof stopOrAddress === 'object' && stopOrAddress.lng) {
+    if (stopOrAddress.lng <= -102 && stopOrAddress.lng >= -114) {
+      return true;
+    }
+  }
+  return false;
+};
+
+// Gets browser's native timezone offset in hours (e.g. -4 for EDT, -5 for EST)
+const getBrowserUtcOffsetHours = () => {
+  return -(new Date().getTimezoneOffset() / 60);
+};
+
+// Returns user's short browser timezone name (e.g. 'EDT', 'EST', 'CDT', 'PDT')
+const getBrowserTimezoneAbbr = () => {
+  try {
+    const dString = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' });
+    const parts = dString.split(' ');
+    return parts[parts.length - 1] || 'Local';
+  } catch {
+    return 'Local';
+  }
+};
+
+// Detects timezone for a stop or collection of stops on a day
+const resolveDayTimezone = (dayStops) => {
+  if (!dayStops || dayStops.length === 0) {
+    return {
+      name: 'MDT',
+      offsetHours: -6,
+      isMDT: true,
+      label: 'MDT (UTC-6)',
+      defaultLat: 38.0285,
+      defaultLng: -107.6714,
+    };
+  }
+
+  // If any stop on this day is in MDT, prioritize MDT
+  const hasMDTStop = dayStops.some((s) => isLocationInMDT(s));
+  if (hasMDTStop) {
+    const mdtStop = dayStops.find((s) => isLocationInMDT(s));
+    return {
+      name: 'MDT',
+      offsetHours: -6,
+      isMDT: true,
+      label: 'MDT (UTC-6)',
+      defaultLat: mdtStop?.lat || 38.0285,
+      defaultLng: mdtStop?.lng || -107.6714,
+    };
+  }
+
+  // Fallback to local browser location & offset
+  const firstStop = dayStops[0];
+  const browserOffset = getBrowserUtcOffsetHours();
+  const browserAbbr = getBrowserTimezoneAbbr();
+  return {
+    name: browserAbbr,
+    offsetHours: browserOffset,
+    isMDT: false,
+    label: `${browserAbbr} (Browser)`,
+    defaultLat: firstStop?.lat || 28.5383,
+    defaultLng: firstStop?.lng || -81.3792,
+  };
+};
+
+// Solar Calculation (sunrise and sunset) for any coordinate & timezone offset
+function calculateSolarTimes(
+  dateStr,
+  lat = 39.7392,
+  lng = -104.9903,
+  targetTimezoneOffsetHours = -6
+) {
+  try {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    const startOfYear = new Date(Date.UTC(year, 0, 0));
+    const diff = date.getTime() - startOfYear.getTime();
+    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    const gamma = ((2 * Math.PI) / 365) * (dayOfYear - 1);
+    const eqtime =
+      229.18 *
+      (0.000075 +
+        0.001868 * Math.cos(gamma) -
+        0.032077 * Math.sin(gamma) -
+        0.014615 * Math.cos(2 * gamma) -
+        0.040849 * Math.sin(2 * gamma));
+    const decl =
+      0.006918 -
+      0.399912 * Math.cos(gamma) +
+      0.070257 * Math.sin(gamma) -
+      0.006758 * Math.cos(2 * gamma) +
+      0.000907 * Math.sin(2 * gamma);
+
+    const radLat = lat * (Math.PI / 180);
+    const zenith = 90.833 * (Math.PI / 180);
+    const cosHA =
+      Math.cos(zenith) / (Math.cos(radLat) * Math.cos(decl)) -
+      Math.tan(radLat) * Math.tan(decl);
+
+    if (cosHA > 1 || cosHA < -1) {
+      return { sunrise: '06:45 AM', sunset: '07:05 PM', sunriseMin: 405, sunsetMin: 1145 };
+    }
+
+    const ha = Math.acos(cosHA) * (180 / Math.PI);
+    const sunriseUtcMinutes = 720 - 4 * (lng + ha) - eqtime;
+    const sunsetUtcMinutes = 720 - 4 * (lng - ha) - eqtime;
+
+    const sunriseLocal = Math.round(sunriseUtcMinutes + targetTimezoneOffsetHours * 60);
+    const sunsetLocal = Math.round(sunsetUtcMinutes + targetTimezoneOffsetHours * 60);
+
+    return {
+      sunrise: formatTime12h(sunriseLocal),
+      sunset: formatTime12h(sunsetLocal),
+      sunriseMin: sunriseLocal,
+      sunsetMin: sunsetLocal,
+    };
+  } catch {
+    return { sunrise: '06:30 AM', sunset: '07:05 PM', sunriseMin: 390, sunsetMin: 1145 };
+  }
+}
+
+const toMinutes = (timeStr) => {
   if (!timeStr) return 0;
   const [h, m] = timeStr.split(':').map(Number);
   return (h || 0) * 60 + (m || 0);
 };
 
-const toTimeString = (min: number): string => {
+const toTimeString = (min) => {
   const norm = ((min % 1440) + 1440) % 1440;
   const h = Math.floor(norm / 60);
   const m = norm % 60;
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 };
 
-const formatTime12h = (min: number): string => {
+const formatTime12h = (min) => {
   const norm = ((min % 1440) + 1440) % 1440;
   const h = Math.floor(norm / 60);
   const m = norm % 60;
@@ -196,14 +470,14 @@ const formatTime12h = (min: number): string => {
   return `${displayH}:${m.toString().padStart(2, '0')} ${period}`;
 };
 
-const formatDurationColon = (min: number): string => {
+const formatDurationColon = (min) => {
   if (min < 0) return '0:00';
   const h = Math.floor(min / 60);
   const m = min % 60;
   return `${h}:${m.toString().padStart(2, '0')}`;
 };
 
-const formatDurationWords = (min: number): string => {
+const formatDurationWords = (min) => {
   if (min <= 0) return '0 min';
   const h = Math.floor(min / 60);
   const m = min % 60;
@@ -211,17 +485,22 @@ const formatDurationWords = (min: number): string => {
   return `${h}h ${m > 0 ? `${m}m` : ''}`.trim();
 };
 
-const formatDateDisplay = (dateStr: string): string => {
+const formatDateDisplay = (dateStr) => {
   try {
     const [y, m, d] = dateStr.split('-').map(Number);
     const date = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    });
   } catch {
     return dateStr;
   }
 };
 
-const normalizeTimeTo24h = (raw: string, fallback = '08:00'): string => {
+const normalizeTimeTo24h = (raw, fallback = '08:00') => {
   if (!raw || typeof raw !== 'string') return fallback;
   const str = raw.trim().toUpperCase();
 
@@ -245,7 +524,7 @@ const normalizeTimeTo24h = (raw: string, fallback = '08:00'): string => {
   return fallback;
 };
 
-const parseFlexibleMinutes = (raw: string): number => {
+const parseFlexibleMinutes = (raw) => {
   if (!raw) return 0;
   const str = raw.toString().trim();
   if (str.includes(':')) {
@@ -258,7 +537,7 @@ const parseFlexibleMinutes = (raw: string): number => {
   return isNaN(num) ? 0 : num;
 };
 
-const normalizeDateToISO = (raw: string, fallbackYear = 2026): string => {
+const normalizeDateToISO = (raw, fallbackYear = 2026) => {
   if (!raw) return `${fallbackYear}-09-18`;
   const str = raw.trim();
 
@@ -277,63 +556,20 @@ const normalizeDateToISO = (raw: string, fallbackYear = 2026): string => {
   return `${fallbackYear}-09-18`;
 };
 
-// Solar Calculation pinned to Mountain Daylight Time (UTC -6)
-function calculateSolarTimes(
-  dateStr: string,
-  lat = 39.7392,
-  lng = -104.9903,
-  targetTimezoneOffsetHours = -6
-): { sunrise: string; sunset: string; sunriseMin: number; sunsetMin: number } {
-  try {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const date = new Date(Date.UTC(year, month - 1, day));
-    const startOfYear = new Date(Date.UTC(year, 0, 0));
-    const diff = date.getTime() - startOfYear.getTime();
-    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    const gamma = (2 * Math.PI / 365) * (dayOfYear - 1);
-    const eqtime = 229.18 * (0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma) - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma));
-    const decl = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma) - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma);
-
-    const radLat = lat * (Math.PI / 180);
-    const zenith = 90.833 * (Math.PI / 180);
-    const cosHA = (Math.cos(zenith) / (Math.cos(radLat) * Math.cos(decl))) - (Math.tan(radLat) * Math.tan(decl));
-
-    if (cosHA > 1 || cosHA < -1) {
-      return { sunrise: '06:45 AM', sunset: '07:05 PM', sunriseMin: 405, sunsetMin: 1145 };
-    }
-
-    const ha = Math.acos(cosHA) * (180 / Math.PI);
-    const sunriseUtcMinutes = 720 - 4 * (lng + ha) - eqtime;
-    const sunsetUtcMinutes = 720 - 4 * (lng - ha) - eqtime;
-
-    // Use MDT UTC-6 rather than physical browser timezone
-    const sunriseLocal = Math.round(sunriseUtcMinutes + targetTimezoneOffsetHours * 60);
-    const sunsetLocal = Math.round(sunsetUtcMinutes + targetTimezoneOffsetHours * 60);
-
-    return {
-      sunrise: formatTime12h(sunriseLocal),
-      sunset: formatTime12h(sunsetLocal),
-      sunriseMin: sunriseLocal,
-      sunsetMin: sunsetLocal,
-    };
-  } catch {
-    return { sunrise: '06:45 AM', sunset: '07:05 PM', sunriseMin: 405, sunsetMin: 1145 };
-  }
-}
-
-function parseCSV(text: string): Record<string, string>[] {
+function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
 
-  const headers = lines[0].split(',').map((h) => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
-  const results: Record<string, string>[] = [];
+  const headers = lines[0]
+    .split(',')
+    .map((h) => h.trim().replace(/^["']|["']$/g, '').toLowerCase().replace(/[\s_-]/g, ''));
+  const results = [];
 
   for (let i = 1; i < lines.length; i++) {
     const rawLine = lines[i];
     if (!rawLine.trim()) continue;
 
-    const row: string[] = [];
+    const row = [];
     let insideQuote = false;
     let entry = '';
 
@@ -350,7 +586,7 @@ function parseCSV(text: string): Record<string, string>[] {
     }
     row.push(entry.trim().replace(/^["']|["']$/g, ''));
 
-    const obj: Record<string, string> = {};
+    const obj = {};
     headers.forEach((hdr, idx) => {
       obj[hdr] = row[idx] || '';
     });
@@ -360,7 +596,8 @@ function parseCSV(text: string): Record<string, string>[] {
 }
 
 export default function App() {
-  const [itinerary, setItinerary] = useState<ItineraryStop[]>(() => {
+  // Persistence with LocalStorage
+  const [itinerary, setItinerary] = useState(() => {
     try {
       const cached = localStorage.getItem('trailsync_itinerary_data');
       return cached ? JSON.parse(cached) : INITIAL_DATA;
@@ -369,7 +606,7 @@ export default function App() {
     }
   });
 
-  const [sheetUrl, setSheetUrl] = useState<string>(() => {
+  const [sheetUrl, setSheetUrl] = useState(() => {
     return (
       localStorage.getItem('trailsync_sheet_url') ||
       'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnbvJS7yfpExgR8hWefk4FJWaeRyh52q03uZs7hopOvFnsJoveg8O_FUYPABojI9Fn0bjRSySwdoyY/pub?gid=1559519314&single=true&output=csv'
@@ -379,12 +616,14 @@ export default function App() {
   const [settings, setSettings] = useState(() => {
     try {
       const saved = localStorage.getItem('trailsync_settings');
-      return saved ? JSON.parse(saved) : {
-        preferImagesInCards: true,
-        cascadeDownstream: true,
-        showSunriseSunset: true,
-        showLiveTimeline: true,
-      };
+      return saved
+        ? JSON.parse(saved)
+        : {
+            preferImagesInCards: true,
+            cascadeDownstream: true,
+            showSunriseSunset: true,
+            showLiveTimeline: true,
+          };
     } catch {
       return {
         preferImagesInCards: true,
@@ -395,31 +634,30 @@ export default function App() {
     }
   });
 
-  const [activeTab, setActiveTab] = useState<'itinerary' | 'gantt' | 'summary'>('itinerary');
-  const [selectedItem, setSelectedItem] = useState<ItineraryStop | null>(null);
-  const [editingItem, setEditingItem] = useState<any>(null);
+  const fileInputRef = useRef(null);
+
+  // Derive unique trip dates
+  const tripDates = useMemo(() => {
+    const dates = Array.from(new Set(itinerary.map((it) => it.date))).sort();
+    return dates.length > 0 ? dates : ['2026-09-23'];
+  }, [itinerary]);
+
+  // Default to Wed Sep 23 (or first available date)
+  const [selectedDate, setSelectedDate] = useState(() => {
+    return tripDates.includes('2026-09-23') ? '2026-09-23' : tripDates[0] || '2026-09-18';
+  });
+
+  const [activeTab, setActiveTab] = useState('itinerary');
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
   const [isAddMode, setIsAddMode] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [showCalendarPicker, setShowCalendarPicker] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [syncStatus, setSyncStatus] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const tripDates = useMemo(() => {
-    const dates = Array.from(new Set(itinerary.map((it) => it.date))).sort();
-    return dates.length > 0 ? dates : ['2026-09-18'];
-  }, [itinerary]);
-
-  const [selectedDate, setSelectedDate] = useState<string>(() => tripDates[0] || '2026-09-18');
-
-  useEffect(() => {
-    if (!tripDates.includes(selectedDate)) {
-      setSelectedDate(tripDates[0] || '2026-09-18');
-    }
-  }, [tripDates, selectedDate]);
-
+  // Sync to localStorage
   useEffect(() => {
     localStorage.setItem('trailsync_itinerary_data', JSON.stringify(itinerary));
   }, [itinerary]);
@@ -432,24 +670,11 @@ export default function App() {
     localStorage.setItem('trailsync_settings', JSON.stringify(settings));
   }, [settings]);
 
-  // Sun calculation using MDT (-6 offset)
-  const currentSun: DaySunData = useMemo(() => {
-    const calc = calculateSolarTimes(selectedDate, 39.7392, -104.9903, -6);
-    return {
-      label: formatDateDisplay(selectedDate),
-      sunrise: calc.sunrise,
-      sunset: calc.sunset,
-      sunriseMin: calc.sunriseMin,
-      sunsetMin: calc.sunsetMin,
-      isManual: false,
-    };
-  }, [selectedDate]);
-
-  const timelineStartMin = 6 * 60;
-  const timelineEndMin = 21 * 60;
-  const totalTimelineMinutes = timelineEndMin - timelineStartMin;
-  const timelinePixelHeight = 720;
-  const minToPx = (m: number) => ((m - timelineStartMin) / totalTimelineMinutes) * timelinePixelHeight;
+  useEffect(() => {
+    if (!tripDates.includes(selectedDate)) {
+      setSelectedDate(tripDates[0] || '2026-09-18');
+    }
+  }, [tripDates, selectedDate]);
 
   const currentDayItems = useMemo(() => {
     return itinerary
@@ -457,7 +682,36 @@ export default function App() {
       .sort((a, b) => toMinutes(a.arrivalTime) - toMinutes(b.arrivalTime));
   }, [itinerary, selectedDate]);
 
-  // Overlap Detection
+  // Dynamic Day Timezone: MDT (UTC-6) if location is in MDT/Colorado, otherwise fallback to local browser location
+  const currentDayTz = useMemo(() => {
+    return resolveDayTimezone(currentDayItems);
+  }, [currentDayItems]);
+
+  // Day Solar Times computed specifically for the waypoint's actual location & detected timezone
+  const currentSun = useMemo(() => {
+    const calc = calculateSolarTimes(
+      selectedDate,
+      currentDayTz.defaultLat,
+      currentDayTz.defaultLng,
+      currentDayTz.offsetHours
+    );
+    return {
+      label: formatDateDisplay(selectedDate),
+      sunrise: calc.sunrise,
+      sunset: calc.sunset,
+      sunriseMin: calc.sunriseMin,
+      sunsetMin: calc.sunsetMin,
+      tzName: currentDayTz.name,
+      isMDT: currentDayTz.isMDT,
+    };
+  }, [selectedDate, currentDayTz]);
+
+  const timelineStartMin = 6 * 60;
+  const timelineEndMin = 21 * 60; // 9:00 PM
+  const totalTimelineMinutes = timelineEndMin - timelineStartMin;
+  const timelinePixelHeight = 720;
+  const minToPx = (m) => ((m - timelineStartMin) / totalTimelineMinutes) * timelinePixelHeight;
+
   const overlaps = useMemo(() => {
     const conflicts = [];
     for (let i = 0; i < currentDayItems.length; i++) {
@@ -482,7 +736,7 @@ export default function App() {
   }, [currentDayItems]);
 
   const conflictingItemIds = useMemo(() => {
-    const set = new Set<string>();
+    const set = new Set();
     overlaps.forEach((c) => {
       set.add(c.itemA.id);
       set.add(c.itemB.id);
@@ -490,7 +744,6 @@ export default function App() {
     return set;
   }, [overlaps]);
 
-  // Summary stats
   const summaryStats = useMemo(() => {
     let totalDriveMin = 0;
     let totalHikeTransitMin = 0;
@@ -546,7 +799,8 @@ export default function App() {
     };
   }, [currentDayItems]);
 
-  const getActivityMeta = (type: string) => {
+  // Visual Activity Metadata
+  const getActivityMeta = (type) => {
     switch (type) {
       case 'lodging':
         return {
@@ -606,7 +860,7 @@ export default function App() {
     if (idx < tripDates.length - 1) setSelectedDate(tripDates[idx + 1]);
   };
 
-  const cascadeSchedule = (updatedItem: ItineraryStop, fullList: ItineraryStop[]) => {
+  const cascadeSchedule = (updatedItem, fullList) => {
     if (!settings.cascadeDownstream) {
       return fullList.map((it) => (it.id === updatedItem.id ? updatedItem : it));
     }
@@ -663,11 +917,10 @@ export default function App() {
     return [...otherDays, ...updatedDayItems];
   };
 
-  // Complete refresh and clean ingestion from Sheet Rows
-  const handleIngestRows = (rows: Record<string, string>[]) => {
+  const handleIngestRows = (rows) => {
     let lastValidDate = '2026-09-18';
 
-    const formatted: ItineraryStop[] = rows
+    const formatted = rows
       .filter((r) => r.destination || r.location || r.stop)
       .map((r, idx) => {
         const destination = (r.destination || r.location || r.stop || `Stop ${idx + 1}`).trim();
@@ -700,31 +953,54 @@ export default function App() {
         const travelMinutes = parseFlexibleMinutes(r.travelminutes || r.drive || r.traveltime);
 
         const modeVal = (r.travelmode || r.mode || '').toLowerCase();
-        let travelMode: 'drive' | 'hike' | 'bike' | 'fly' = 'drive';
+        let travelMode = 'drive';
         if (['drive', 'hike', 'bike', 'fly'].includes(modeVal)) {
-          travelMode = modeVal as any;
-        } else if (destination.toLowerCase().includes('flight') || destination.toLowerCase().includes('gate') || (r.notes || '').toLowerCase().includes('flight')) {
+          travelMode = modeVal;
+        } else if (
+          destination.toLowerCase().includes('flight') ||
+          destination.toLowerCase().includes('gate') ||
+          destination.toLowerCase().includes('airport') ||
+          (r.notes || '').toLowerCase().includes('flight')
+        ) {
           travelMode = 'fly';
         }
 
         const rawType = (r.activitytype || r.type || '').toLowerCase();
-        let activityType: 'lodging' | 'sightseeing' | 'hiking' | 'food' | 'driving' = 'sightseeing';
+        let activityType = 'sightseeing';
         const combined = (destination + ' ' + (r.notes || '')).toLowerCase();
 
         if (['lodging', 'sightseeing', 'hiking', 'food', 'driving'].includes(rawType)) {
-          activityType = rawType as any;
-        } else if (combined.includes('hostel') || combined.includes('hotel') || combined.includes('lodge') || combined.includes('resort')) {
+          activityType = rawType;
+        } else if (
+          combined.includes('hostel') ||
+          combined.includes('hotel') ||
+          combined.includes('lodge') ||
+          combined.includes('inn')
+        ) {
           activityType = 'lodging';
-        } else if (combined.includes('hike') || combined.includes('trail') || combined.includes('falls') || combined.includes('overlook') || combined.includes('pass')) {
-          activityType = combined.includes('overlook') ? 'sightseeing' : 'hiking';
-        } else if (combined.includes('food') || combined.includes('coffee') || combined.includes('cafe') || combined.includes('bakery') || combined.includes('lunch') || combined.includes('dinner')) {
+        } else if (
+          combined.includes('hike') ||
+          combined.includes('trail') ||
+          combined.includes('falls') ||
+          combined.includes('gorge')
+        ) {
+          activityType = 'hiking';
+        } else if (
+          combined.includes('food') ||
+          combined.includes('coffee') ||
+          combined.includes('cafe') ||
+          combined.includes('bakery') ||
+          combined.includes('restaurant')
+        ) {
           activityType = 'food';
         }
 
         const notes = r.notes || r.description || '';
         const insights = r.insights ? r.insights.split(/[|;]/).map((s) => s.trim()) : [];
 
-        // Stable ID based on date and index to cleanly overwrite rather than stacking duplicates
+        // Check if destination is in MDT
+        const stopIsMDT = isLocationInMDT({ destination, address, notes });
+
         return {
           id: `stop-${date}-${idx}`,
           date,
@@ -737,16 +1013,17 @@ export default function App() {
           activityType,
           notes,
           insights,
-          tags: [activityType.toUpperCase()],
-          image: r.image || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80',
-          hardTime: (r.hardtime || 'none') as any,
+          tags: [activityType.toUpperCase(), stopIsMDT ? 'MDT' : 'LOCAL'],
+          image:
+            r.image ||
+            'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80',
+          hardTime: r.hardtime || 'none',
           lat: parseFloat(r.lat || r.latitude || '0') || undefined,
           lng: parseFloat(r.lng || r.longitude || '0') || undefined,
         };
       });
 
     if (formatted.length > 0) {
-      // Overwrite state and local storage completely with freshly synced rows
       setItinerary(formatted);
       setSelectedDate(formatted[0].date);
       setSyncStatus(`Successfully loaded ${formatted.length} stops! Itinerary updated.`);
@@ -760,29 +1037,30 @@ export default function App() {
     setIsSyncing(true);
     setSyncStatus('Connecting to Google Sheets CSV...');
     try {
-      // Add cache buster query parameter so Google Sheet updates are pulled immediately
-      const fetchUrl = sheetUrl.includes('?') ? `${sheetUrl}&_t=${Date.now()}` : `${sheetUrl}?_t=${Date.now()}`;
+      const fetchUrl = sheetUrl.includes('?')
+        ? `${sheetUrl}&_t=${Date.now()}`
+        : `${sheetUrl}?_t=${Date.now()}`;
       const response = await fetch(fetchUrl, { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
       const text = await response.text();
       const parsed = parseCSV(text);
       if (parsed.length === 0) throw new Error('CSV is empty or malformed.');
       handleIngestRows(parsed);
-    } catch (err: any) {
+    } catch (err) {
       setSyncStatus(`Sync Failed: ${err.message}. Ensure sheet is published as CSV.`);
     } finally {
       setIsSyncing(false);
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const text = event.target?.result as string;
+        const text = event.target?.result;
         if (file.name.endsWith('.json')) {
           const json = JSON.parse(text);
           if (Array.isArray(json)) {
@@ -798,7 +1076,7 @@ export default function App() {
           const parsed = parseCSV(text);
           handleIngestRows(parsed);
         }
-      } catch (err: any) {
+      } catch (err) {
         setSyncStatus(`Upload failed: ${err.message}`);
       }
     };
@@ -871,6 +1149,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#E5E9E2] text-slate-900 flex justify-center p-0 sm:p-4 font-sans antialiased selection:bg-[#234E42] selection:text-white">
+      {/* Hidden File Input for CSV / JSON Upload */}
       <input
         type="file"
         ref={fileInputRef}
@@ -879,20 +1158,24 @@ export default function App() {
         className="hidden"
       />
 
+      {/* Mobile Shell Frame */}
       <div className="w-full max-w-md bg-[#F4F6F0] text-slate-900 shadow-2xl flex flex-col relative overflow-hidden sm:rounded-[42px] border-0 sm:border-8 sm:border-slate-800 h-[100dvh] sm:h-[870px]">
+        
         {/* Status Bar */}
         <div className="bg-[#F4F6F0] px-6 pt-3 pb-1 flex items-center justify-between text-xs tracking-tight shrink-0 select-none">
           <span className="font-semibold text-sm text-slate-800">12:14</span>
           <div className="w-24 h-4 bg-slate-900 rounded-full mx-auto hidden sm:block"></div>
           <div className="flex items-center space-x-1.5 text-slate-700">
-            <span className="text-[11px] font-bold">MDT (UTC-6)</span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-800">
+              {currentDayTz.name}
+            </span>
             <div className="w-5 h-2.5 border border-slate-700 rounded-xs p-0.5 flex items-center">
               <div className="h-full w-3.5 bg-slate-900 rounded-2xs"></div>
             </div>
           </div>
         </div>
 
-        {/* Top Header */}
+        {/* STREAMLINED TOP HEADER */}
         <div className="px-5 pt-2 pb-3 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2.5">
@@ -917,7 +1200,7 @@ export default function App() {
               <button
                 onClick={() => setShowSettingsModal(true)}
                 className="w-8 h-8 rounded-xl bg-white border border-slate-200/80 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition shadow-2xs cursor-pointer"
-                title="Settings & Export"
+                title="Settings & Display"
               >
                 <Settings className="w-4 h-4" />
               </button>
@@ -933,7 +1216,7 @@ export default function App() {
             </p>
           </div>
 
-          {/* Date Selector Pill */}
+          {/* Date Selector Pill with Waypoint-Aware Sunrise & Sunset */}
           <div className="flex items-center space-x-2 mt-3.5">
             <button
               onClick={handlePrevDay}
@@ -952,13 +1235,13 @@ export default function App() {
                   {currentSun.label}
                 </span>
                 <div className="flex items-center space-x-2 text-[10px] text-slate-500 font-medium mt-0.5">
-                  <span className="flex items-center space-x-1 text-amber-700 font-semibold" title="Sunrise in MDT">
+                  <span className="flex items-center space-x-1 text-amber-700 font-semibold" title={`Sunrise in ${currentSun.tzName}`}>
                     <Sun className="w-3 h-3 text-amber-500" />
-                    <span>{currentSun.sunrise} MDT</span>
+                    <span>{currentSun.sunrise} {currentSun.tzName}</span>
                   </span>
-                  <span className="flex items-center space-x-1 text-indigo-700 font-semibold" title="Sunset in MDT">
+                  <span className="flex items-center space-x-1 text-indigo-700 font-semibold" title={`Sunset in ${currentSun.tzName}`}>
                     <Moon className="w-3 h-3 text-indigo-500" />
-                    <span>{currentSun.sunset} MDT</span>
+                    <span>{currentSun.sunset} {currentSun.tzName}</span>
                   </span>
                 </div>
               </div>
@@ -1031,10 +1314,12 @@ export default function App() {
           </div>
         )}
 
-        {/* MAIN SCROLLABLE CONTENT */}
+        {/* ======================================================== */}
+        {/* MAIN SCROLLABLE CONTENT                                  */}
+        {/* ======================================================== */}
         <div className="flex-1 overflow-y-auto relative bg-[#F4F6F0] px-4 pb-24">
           
-          {/* TAB 1: ITINERARY CARDS */}
+          {/* VIEW 1: ITINERARY CARDS */}
           {activeTab === 'itinerary' && (
             <div className="space-y-1.5 pt-1">
               <div className="flex items-center justify-between text-xs px-1 text-slate-500 font-semibold mb-2">
@@ -1050,13 +1335,16 @@ export default function App() {
                 const travelMin = item.travelMinutes || 0;
                 const transitMeta = getTransitMeta(item.travelMode);
                 const TransitIcon = transitMeta.icon;
+                const isItemMDT = isLocationInMDT(item);
 
+                // Proportional bar calculation
                 const maxScale = 90;
                 const travelPct = Math.min(50, (travelMin / maxScale) * 100);
                 const stayPct = Math.min(100 - travelPct, (Math.max(1, durationMin) / maxScale) * 100);
 
                 return (
                   <React.Fragment key={item.id}>
+                    {/* INTER-CARD TRAVEL CONNECTOR (Only display if > 0 minutes) */}
                     {index > 0 && travelMin > 0 && (
                       <div className="flex items-center space-x-2 py-1 pl-7 text-slate-600 text-xs font-medium">
                         <div className="w-0.5 h-6 bg-slate-300 ml-1.5 rounded-full"></div>
@@ -1069,6 +1357,7 @@ export default function App() {
                       </div>
                     )}
 
+                    {/* MAIN WAYPOINT CARD */}
                     <div
                       onClick={() => setSelectedItem(item)}
                       className={`p-3.5 rounded-2xl bg-white border transition-all cursor-pointer shadow-xs hover:shadow-md group ${
@@ -1078,6 +1367,7 @@ export default function App() {
                       }`}
                     >
                       <div className="flex items-start gap-3.5">
+                        {/* Left Thumbnail / Activity Icon */}
                         <div
                           className={`w-13 h-13 sm:w-14 sm:h-14 rounded-2xl shrink-0 overflow-hidden flex items-center justify-center relative ${meta.bgSoft}`}
                         >
@@ -1100,12 +1390,22 @@ export default function App() {
                           )}
                         </div>
 
+                        {/* Middle & Right Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-1.5">
                               <span className="font-bold text-slate-800 text-sm tracking-tight">
                                 {formatTime12h(toMinutes(item.arrivalTime))} – {formatTime12h(toMinutes(item.departTime))}
                               </span>
+                              {isItemMDT ? (
+                                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-200">
+                                  MDT
+                                </span>
+                              ) : (
+                                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                                  {currentDayTz.name}
+                                </span>
+                              )}
                               {item.hardTime && item.hardTime !== 'none' && (
                                 <span title={`Hard ${item.hardTime} lock`} className="text-amber-600">
                                   <Lock className="w-3 h-3" />
@@ -1123,6 +1423,7 @@ export default function App() {
                             {item.address || 'Waypoint Location'}
                           </p>
 
+                          {/* Activity Type Badge + Duration Here */}
                           <div className="flex items-center space-x-2.5 text-xs text-slate-600 font-medium mt-2">
                             <span
                               className={`text-[10px] font-bold px-2 py-0.5 rounded-md tracking-wider uppercase border border-current/15 ${meta.bgSoft} ${meta.iconColor}`}
@@ -1136,6 +1437,7 @@ export default function App() {
                             </div>
                           </div>
 
+                          {/* Dual-colored Mini Gantt Bar */}
                           <div className="w-full bg-[#EBEBEB] rounded-full h-1.5 mt-2.5 overflow-hidden flex">
                             {travelMin > 0 && (
                               <div
@@ -1149,6 +1451,7 @@ export default function App() {
                             />
                           </div>
 
+                          {/* Overlap notice */}
                           {isConflict && (
                             <div className="mt-2 text-[11px] font-bold text-rose-600 flex items-center space-x-1">
                               <AlertTriangle className="w-3 h-3" />
@@ -1164,14 +1467,14 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 2: GANTT TIMELINE VIEW */}
+          {/* VIEW 2: GANTT TIMELINE VIEW */}
           {activeTab === 'gantt' && (
             <div className="pt-2 select-none">
               <div
                 className="relative bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
                 style={{ height: `${timelinePixelHeight}px` }}
               >
-                {/* Sunrise Shading in MDT */}
+                {/* Sunrise Shading */}
                 {settings.showSunriseSunset && currentSun.sunriseMin > timelineStartMin && (
                   <div
                     className="absolute left-0 right-0 top-0 bg-slate-950/10 border-b border-amber-300 pointer-events-none z-1 flex items-end px-3 pb-1"
@@ -1179,25 +1482,28 @@ export default function App() {
                   >
                     <span className="text-[10px] font-semibold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded flex items-center space-x-1">
                       <Sun className="w-3 h-3 text-amber-600" />
-                      <span>Sunrise {currentSun.sunrise} MDT</span>
+                      <span>Sunrise {currentSun.sunrise} {currentSun.tzName}</span>
                     </span>
                   </div>
                 )}
 
-                {/* Sunset Shading in MDT */}
+                {/* Sunset Shading */}
                 {settings.showSunriseSunset && currentSun.sunsetMin < timelineEndMin && (
                   <div
                     className="absolute left-0 right-0 bottom-0 bg-indigo-950/10 border-t border-indigo-300 pointer-events-none z-1 flex items-start px-3 pt-1"
-                    style={{ top: `${minToPx(currentSun.sunsetMin)}px`, height: `${minToPx(timelineEndMin) - minToPx(currentSun.sunsetMin)}px` }}
+                    style={{
+                      top: `${minToPx(currentSun.sunsetMin)}px`,
+                      height: `${minToPx(timelineEndMin) - minToPx(currentSun.sunsetMin)}px`,
+                    }}
                   >
                     <span className="text-[10px] font-semibold text-indigo-800 bg-indigo-100 px-1.5 py-0.5 rounded flex items-center space-x-1">
                       <Moon className="w-3 h-3 text-indigo-600" />
-                      <span>Sunset {currentSun.sunset} MDT</span>
+                      <span>Sunset {currentSun.sunset} {currentSun.tzName}</span>
                     </span>
                   </div>
                 )}
 
-                {/* Hourly Lines */}
+                {/* Hour Grid Lines */}
                 {Array.from({ length: 16 }).map((_, idx) => {
                   const hour = 6 + idx;
                   const minuteVal = hour * 60;
@@ -1218,7 +1524,7 @@ export default function App() {
                   );
                 })}
 
-                {/* Timeline Blocks */}
+                {/* Gantt Activity Blocks with transit-aware connectors */}
                 {currentDayItems.map((item, index) => {
                   const itemArrival = toMinutes(item.arrivalTime);
                   const itemDepart = toMinutes(item.departTime);
@@ -1295,13 +1601,18 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 3: SUMMARY METRICS */}
+          {/* VIEW 3: SUMMARY VIEW */}
           {activeTab === 'summary' && (
             <div className="pt-2 space-y-4">
               <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
-                <h3 className="font-bold text-slate-900 text-sm">
-                  {currentSun.label} Driving & Activity Metrics
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-slate-900 text-sm">
+                    {currentSun.label} Driving & Activity Metrics
+                  </h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#EBF4EE] text-[#1E4238]">
+                    {currentDayTz.label}
+                  </span>
+                </div>
                 <p className="text-xs text-slate-500 mt-0.5">Calculated durations across planned stops</p>
 
                 <div className="grid grid-cols-3 gap-2 mt-3.5">
@@ -1342,7 +1653,7 @@ export default function App() {
                   { key: 'food', label: 'Artisan Food & Coffee', icon: Coffee, color: 'bg-amber-500' },
                   { key: 'lodging', label: 'Thermal Pool & Rest', icon: BedIcon, color: 'bg-[#6C47A8]' },
                 ].map((act) => {
-                  const min = (summaryStats.activityMinutes as any)[act.key] || 0;
+                  const min = summaryStats.activityMinutes[act.key] || 0;
                   const pct = Math.round((min / summaryStats.totalActiveTime) * 100) || 0;
                   const Icon = act.icon;
 
@@ -1368,7 +1679,7 @@ export default function App() {
           )}
         </div>
 
-        {/* Floating Action Button (+) */}
+        {/* FLOATING ACTION BUTTON (+) */}
         <button
           onClick={handleOpenAddModal}
           className="absolute right-4 bottom-16 z-30 w-13 h-13 rounded-full bg-[#234E42] text-white shadow-xl shadow-[#234E42]/40 hover:bg-[#1B3E34] active:scale-95 transition-all flex items-center justify-center cursor-pointer border-2 border-white"
@@ -1377,7 +1688,7 @@ export default function App() {
           <Plus className="w-7 h-7" />
         </button>
 
-        {/* Bottom Nav Dock */}
+        {/* BOTTOM NAVIGATION DOCK */}
         <div className="bg-white border-t border-slate-200 px-6 py-2 flex items-center justify-around shrink-0 z-20">
           <button
             onClick={() => setActiveTab('itinerary')}
@@ -1418,16 +1729,19 @@ export default function App() {
           </button>
         </div>
 
-        {/* MODAL 1: ADD / EDIT DIALOG */}
+        {/* ======================================================== */}
+        {/* MODAL 1: ADD / EDIT WITH TRANSIT SELECTOR & SYNC         */}
+        {/* ======================================================== */}
         {editingItem && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+              
               <div className="px-5 py-3.5 bg-[#F4F6F0] border-b border-slate-200 flex items-center justify-between shrink-0">
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm">
                     {isAddMode ? 'Add Itinerary Entry' : 'Edit Itinerary Entry'}
                   </h3>
-                  <span className="text-[10px] text-slate-500">{currentSun.label}</span>
+                  <span className="text-[10px] text-slate-500">{currentSun.label} • {currentDayTz.name}</span>
                 </div>
                 <button
                   onClick={() => setEditingItem(null)}
@@ -1468,7 +1782,7 @@ export default function App() {
                   />
                 </div>
 
-                {/* Transit Selector */}
+                {/* TRANSIT MODE & TRAVEL TIME SECTION */}
                 <div className="bg-emerald-50/70 p-3.5 rounded-2xl border border-[#234E42]/20 space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="font-bold text-[#1E4238] flex items-center space-x-1.5">
@@ -1527,7 +1841,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Times & Durations */}
+                {/* BIDIRECTIONAL TIME SECTION */}
                 <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">
@@ -1674,7 +1988,7 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Hard Time Lock */}
+                {/* Hard Times Lock */}
                 <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="font-bold text-slate-800 flex items-center space-x-1.5">
@@ -1769,7 +2083,9 @@ export default function App() {
           </div>
         )}
 
-        {/* MODAL 2: CARD DETAIL BOTTOM SHEET */}
+        {/* ======================================================== */}
+        {/* MODAL 2: CARD DETAIL INSPECTION (Bottom Sheet)           */}
+        {/* ======================================================== */}
         {selectedItem && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
@@ -1795,11 +2111,15 @@ export default function App() {
               </div>
 
               <div className="p-5 overflow-y-auto space-y-4 text-xs">
+                {/* Time, Duration & Transit Mode */}
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between">
                   <div>
                     <span className="text-slate-400 block text-[10px] uppercase font-semibold">Scheduled Window</span>
                     <span className="font-bold text-slate-900 text-sm">
                       {formatTime12h(toMinutes(selectedItem.arrivalTime))} – {formatTime12h(toMinutes(selectedItem.departTime))}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-semibold block mt-0.5">
+                      {isLocationInMDT(selectedItem) ? 'Mountain Time (MDT)' : `Local (${currentDayTz.name})`}
                     </span>
                   </div>
                   <div className="text-right">
@@ -1883,12 +2203,14 @@ export default function App() {
           </div>
         )}
 
-        {/* MODAL 3: SETTINGS & BACKUP */}
+        {/* ======================================================== */}
+        {/* MODAL 3: SETTINGS & PREFERENCES                          */}
+        {/* ======================================================== */}
         {showSettingsModal && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
               <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">
-                <h3 className="font-bold text-slate-900 text-sm">Display & Sync Settings</h3>
+                <h3 className="font-bold text-slate-900 text-sm">Display Preferences</h3>
                 <button
                   onClick={() => setShowSettingsModal(false)}
                   className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 cursor-pointer"
@@ -1932,7 +2254,7 @@ export default function App() {
                   <label className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80 cursor-pointer">
                     <div>
                       <span className="font-bold text-slate-800 block">Sunrise & sunset timeline blocks</span>
-                      <span className="text-[11px] text-slate-500">Show golden dawn & dusk hours in MDT</span>
+                      <span className="text-[11px] text-slate-500">Waypoint-aware golden dawn & dusk shading</span>
                     </div>
                     <input
                       type="checkbox"
@@ -1951,19 +2273,19 @@ export default function App() {
                     className="w-full py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer"
                   >
                     <Download className="w-4 h-4 text-emerald-700" />
-                    <span>Export JSON Itinerary Backup</span>
+                    <span>Download JSON Backup</span>
                   </button>
 
                   <button
                     onClick={() => {
                       setItinerary(INITIAL_DATA);
-                      setSelectedDate('2026-09-18');
+                      setSelectedDate('2026-09-23');
                       setShowSettingsModal(false);
                     }}
                     className="w-full py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer"
                   >
                     <RotateCcw className="w-4 h-4" />
-                    <span>Reset to Departure Defaults</span>
+                    <span>Reset to Colorado Tour Defaults</span>
                   </button>
                 </div>
               </div>
@@ -1980,14 +2302,16 @@ export default function App() {
           </div>
         )}
 
-        {/* MODAL 4: SYNC & CSV IMPORT */}
+        {/* ======================================================== */}
+        {/* MODAL 4: SYNC & CLOUD SPREADSHEET MANAGER                */}
+        {/* ======================================================== */}
         {showSyncModal && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto text-xs">
               <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                 <div className="flex items-center space-x-2">
                   <FileSpreadsheet className="w-5 h-5 text-[#234E42]" />
-                  <h3 className="font-bold text-slate-900 text-sm">Sync Google Sheets / Upload</h3>
+                  <h3 className="font-bold text-slate-900 text-sm">Sync Google Sheets & Files</h3>
                 </div>
                 <button onClick={() => setShowSyncModal(false)} className="p-1 text-slate-500 cursor-pointer">
                   <X className="w-5 h-5" />
@@ -2000,8 +2324,8 @@ export default function App() {
                   type="url"
                   value={sheetUrl}
                   onChange={(e) => setSheetUrl(e.target.value)}
-                  placeholder="https://docs.google.com/...output=csv"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs"
+                  placeholder="https://docs.google.com/spreadsheets/...output=csv"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-[#234E42]"
                 />
                 <button
                   onClick={handleSyncUrl}
@@ -2014,14 +2338,14 @@ export default function App() {
               </div>
 
               <div className="border-t border-slate-200 pt-3">
-                <span className="font-bold text-slate-700 block mb-2">Or Upload Offline File</span>
+                <span className="font-bold text-slate-700 block mb-2">Upload or Download Itinerary</span>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     className="py-2.5 px-3 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-center space-x-1.5 cursor-pointer"
                   >
                     <Upload className="w-4 h-4 text-[#234E42]" />
-                    <span>Import File</span>
+                    <span>Upload File</span>
                   </button>
                   <button
                     onClick={handleExportBackup}
@@ -2034,7 +2358,7 @@ export default function App() {
               </div>
 
               {syncStatus && (
-                <div className="p-3 bg-slate-100 rounded-xl text-slate-800 leading-relaxed font-medium">
+                <div className="p-3 bg-[#EBF4EE] border border-[#234E42]/20 rounded-xl text-slate-800 leading-relaxed font-medium">
                   {syncStatus}
                 </div>
               )}
@@ -2042,7 +2366,9 @@ export default function App() {
           </div>
         )}
 
-        {/* MODAL 5: CALENDAR DAY PICKER */}
+        {/* ======================================================== */}
+        {/* MODAL 5: DATE PICKER DRAWER                              */}
+        {/* ======================================================== */}
         {showCalendarPicker && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 space-y-4">
@@ -2058,8 +2384,11 @@ export default function App() {
 
               <div className="space-y-2 max-h-72 overflow-y-auto">
                 {tripDates.map((d) => {
-                  const s = calculateSolarTimes(d, 39.7392, -104.9903, -6);
+                  const dayStops = itinerary.filter((it) => it.date === d);
+                  const dayTz = resolveDayTimezone(dayStops);
+                  const s = calculateSolarTimes(d, dayTz.defaultLat, dayTz.defaultLng, dayTz.offsetHours);
                   const isSelected = d === selectedDate;
+
                   return (
                     <button
                       key={d}
@@ -2076,7 +2405,7 @@ export default function App() {
                       <div>
                         <span className="font-bold text-sm block">{formatDateDisplay(d)}</span>
                         <span className={`text-[11px] ${isSelected ? 'text-emerald-100' : 'text-slate-500'}`}>
-                          Sunrise {s.sunrise} MDT • Sunset {s.sunset} MDT
+                          Sunrise {s.sunrise} {dayTz.name} • Sunset {s.sunset} {dayTz.name}
                         </span>
                       </div>
                       {isSelected && <Check className="w-5 h-5 text-white" />}
