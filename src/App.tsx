@@ -32,7 +32,6 @@ import {
   Trash2
 } from 'lucide-react';
 
-// Bed SVG Icon for lodging
 const BedIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
@@ -78,7 +77,6 @@ export interface DaySunData {
   isManual?: boolean;
 }
 
-// Transit Mode Meta Helper
 const getTransitMeta = (mode = 'drive') => {
   switch (mode) {
     case 'hike':
@@ -128,87 +126,54 @@ const getTransitMeta = (mode = 'drive') => {
 const INITIAL_DATA: ItineraryStop[] = [
   {
     id: 'stop-1',
-    date: '2026-09-23',
-    destination: 'The Bivvi Hostel Telluride',
-    address: 'Telluride, CO',
-    arrivalTime: '07:00',
-    departTime: '07:05',
+    date: '2026-09-18',
+    destination: 'Home',
+    address: 'Departure Point',
+    arrivalTime: '09:00',
+    departTime: '09:00',
     travelMinutes: 0,
     travelMode: 'drive',
     activityType: 'lodging',
-    notes: 'Sunrise 6:23 AM. Check out, load vehicle, depart east via CO-62.',
-    insights: [
-      'Expedited self-checkout available at front kiosk',
-      'Fill up water bottles with filtered mountain spring tap',
-      'CO-62 can have morning black ice on north-facing curves'
-    ],
-    tags: ['Lodging', 'Check Out', 'Prep'],
+    notes: 'Trip begins.',
+    insights: [],
+    tags: ['Departure'],
     image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=400&q=80',
     hardTime: 'departure',
   },
   {
     id: 'stop-2',
-    date: '2026-09-23',
-    destination: 'Dallas Divide Summit Overlook',
-    address: 'CO-62, Telluride, CO',
-    arrivalTime: '07:23',
-    departTime: '07:33',
-    travelMinutes: 18,
+    date: '2026-09-18',
+    destination: 'Park N Go Orlando',
+    address: 'Orlando, FL',
+    arrivalTime: '10:10',
+    departTime: '10:30',
+    travelMinutes: 70,
     travelMode: 'drive',
-    activityType: 'sightseeing',
-    notes: 'Classic panoramic photo stop; view Mount Sneffels range and golden fall aspens.',
-    insights: [
-      'Prime golden morning light hits Mount Sneffels (7:00–9:00 AM)',
-      'Designated paved pullout with room for 15 vehicles',
-      'Overlook is 0.2 miles from parking area on level path'
-    ],
-    tags: ['Scenic View', 'Photo Stop', 'Roadside'],
+    activityType: 'driving',
+    notes: 'Airport parking transfer',
+    insights: ['Shuttle transfers to terminal every 5-10 mins'],
+    tags: ['Transit'],
     image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80',
     hardTime: 'arrival',
   },
   {
     id: 'stop-3',
-    date: '2026-09-23',
-    destination: 'Historic Main Street (Ouray)',
-    address: 'Main St, Ouray, CO',
-    arrivalTime: '08:01',
-    departTime: '08:40',
-    travelMinutes: 28,
-    travelMode: 'drive',
-    activityType: 'food',
-    notes: 'Stroll Victorian district; grab morning coffee and artisan pastries.',
-    insights: [
-      'Artisan Bakery & Roaster opens early at 7:00 AM',
-      'Public restrooms behind the Historic Wright Opera House',
-      'Free 2-hour diagonal parking along Main Street'
-    ],
-    tags: ['Breakfast', 'Victorian Town', 'Coffee'],
-    image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=400&q=80',
-    hardTime: 'none',
-  },
-  {
-    id: 'stop-4',
-    date: '2026-09-23',
-    destination: 'Box Cañon Falls Park',
-    address: 'Box Canyon Rd, Ouray, CO',
-    arrivalTime: '08:45',
-    departTime: '09:45',
-    travelMinutes: 5,
-    travelMode: 'drive',
-    activityType: 'hiking',
-    notes: 'Walk suspended metal walkway into 285-ft canyon waterfall; High Bridge overlook.',
-    insights: [
-      'Suspended metal walkway can be wet and slippery near spray',
-      'Park admission is $7/adult (card accepted at visitor center)',
-      'High Bridge trail gains 200ft in 0.5 miles for panoramic gorge view'
-    ],
-    tags: ['Waterfall', 'Suspended Walkway', 'Gorge'],
-    image: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=400&q=80',
+    date: '2026-09-18',
+    destination: 'Denver International Airport',
+    address: 'Denver, CO',
+    arrivalTime: '15:52',
+    departTime: '16:12',
+    travelMinutes: 144,
+    travelMode: 'fly',
+    activityType: 'sightseeing',
+    notes: 'Flight is 4+ hours. Now in MDT timezone.',
+    insights: ['Pick up rental vehicle at concourse shuttle'],
+    tags: ['Arrival', 'MDT'],
+    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
     hardTime: 'arrival',
   }
 ];
 
-// Time conversion utilities
 const toMinutes = (timeStr: string): number => {
   if (!timeStr) return 0;
   const [h, m] = timeStr.split(':').map(Number);
@@ -249,14 +214,13 @@ const formatDurationWords = (min: number): string => {
 const formatDateDisplay = (dateStr: string): string => {
   try {
     const [y, m, d] = dateStr.split('-').map(Number);
-    const date = new Date(y, m - 1, d);
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const date = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
   } catch {
     return dateStr;
   }
 };
 
-// Flexible 12h/24h time parser
 const normalizeTimeTo24h = (raw: string, fallback = '08:00'): string => {
   if (!raw || typeof raw !== 'string') return fallback;
   const str = raw.trim().toUpperCase();
@@ -281,7 +245,6 @@ const normalizeTimeTo24h = (raw: string, fallback = '08:00'): string => {
   return fallback;
 };
 
-// Parse durations like "1:10", "0:20", "20m", "45", or "0:00"
 const parseFlexibleMinutes = (raw: string): number => {
   if (!raw) return 0;
   const str = raw.toString().trim();
@@ -295,7 +258,6 @@ const parseFlexibleMinutes = (raw: string): number => {
   return isNaN(num) ? 0 : num;
 };
 
-// Converts date formats like "Fri 9/18", "9/18/2026", "2026-09-18" -> "2026-09-18"
 const normalizeDateToISO = (raw: string, fallbackYear = 2026): string => {
   if (!raw) return `${fallbackYear}-09-18`;
   const str = raw.trim();
@@ -315,12 +277,17 @@ const normalizeDateToISO = (raw: string, fallbackYear = 2026): string => {
   return `${fallbackYear}-09-18`;
 };
 
-// Solar time calculator
-function calculateSolarTimes(dateStr: string, lat = 39.7392, lng = -104.9903): { sunrise: string; sunset: string; sunriseMin: number; sunsetMin: number } {
+// Solar Calculation pinned to Mountain Daylight Time (UTC -6)
+function calculateSolarTimes(
+  dateStr: string,
+  lat = 39.7392,
+  lng = -104.9903,
+  targetTimezoneOffsetHours = -6
+): { sunrise: string; sunset: string; sunriseMin: number; sunsetMin: number } {
   try {
     const [year, month, day] = dateStr.split('-').map(Number);
-    const date = new Date(year, month - 1, day);
-    const startOfYear = new Date(year, 0, 0);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    const startOfYear = new Date(Date.UTC(year, 0, 0));
     const diff = date.getTime() - startOfYear.getTime();
     const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
 
@@ -333,17 +300,16 @@ function calculateSolarTimes(dateStr: string, lat = 39.7392, lng = -104.9903): {
     const cosHA = (Math.cos(zenith) / (Math.cos(radLat) * Math.cos(decl))) - (Math.tan(radLat) * Math.tan(decl));
 
     if (cosHA > 1 || cosHA < -1) {
-      return { sunrise: '06:30 AM', sunset: '07:00 PM', sunriseMin: 390, sunsetMin: 1140 };
+      return { sunrise: '06:45 AM', sunset: '07:05 PM', sunriseMin: 405, sunsetMin: 1145 };
     }
 
     const ha = Math.acos(cosHA) * (180 / Math.PI);
-    const timezoneOffsetHours = -date.getTimezoneOffset() / 60;
-
     const sunriseUtcMinutes = 720 - 4 * (lng + ha) - eqtime;
     const sunsetUtcMinutes = 720 - 4 * (lng - ha) - eqtime;
 
-    const sunriseLocal = Math.round(sunriseUtcMinutes + timezoneOffsetHours * 60);
-    const sunsetLocal = Math.round(sunsetUtcMinutes + timezoneOffsetHours * 60);
+    // Use MDT UTC-6 rather than physical browser timezone
+    const sunriseLocal = Math.round(sunriseUtcMinutes + targetTimezoneOffsetHours * 60);
+    const sunsetLocal = Math.round(sunsetUtcMinutes + targetTimezoneOffsetHours * 60);
 
     return {
       sunrise: formatTime12h(sunriseLocal),
@@ -352,11 +318,10 @@ function calculateSolarTimes(dateStr: string, lat = 39.7392, lng = -104.9903): {
       sunsetMin: sunsetLocal,
     };
   } catch {
-    return { sunrise: '06:30 AM', sunset: '07:00 PM', sunriseMin: 390, sunsetMin: 1140 };
+    return { sunrise: '06:45 AM', sunset: '07:05 PM', sunriseMin: 405, sunsetMin: 1145 };
   }
 }
 
-// CSV Parser handling quotes and comman separation
 function parseCSV(text: string): Record<string, string>[] {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
@@ -395,7 +360,6 @@ function parseCSV(text: string): Record<string, string>[] {
 }
 
 export default function App() {
-  // Itinerary state backed by LocalStorage
   const [itinerary, setItinerary] = useState<ItineraryStop[]>(() => {
     try {
       const cached = localStorage.getItem('trailsync_itinerary_data');
@@ -410,15 +374,6 @@ export default function App() {
       localStorage.getItem('trailsync_sheet_url') ||
       'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnbvJS7yfpExgR8hWefk4FJWaeRyh52q03uZs7hopOvFnsJoveg8O_FUYPABojI9Fn0bjRSySwdoyY/pub?gid=1559519314&single=true&output=csv'
     );
-  });
-
-  const [customSun, setCustomSun] = useState<Record<string, DaySunData>>(() => {
-    try {
-      const cached = localStorage.getItem('trailsync_solar_overrides');
-      return cached ? JSON.parse(cached) : {};
-    } catch {
-      return {};
-    }
   });
 
   const [settings, setSettings] = useState(() => {
@@ -454,14 +409,14 @@ export default function App() {
 
   const tripDates = useMemo(() => {
     const dates = Array.from(new Set(itinerary.map((it) => it.date))).sort();
-    return dates.length > 0 ? dates : ['2026-09-23'];
+    return dates.length > 0 ? dates : ['2026-09-18'];
   }, [itinerary]);
 
-  const [selectedDate, setSelectedDate] = useState<string>(() => tripDates[0] || '2026-09-23');
+  const [selectedDate, setSelectedDate] = useState<string>(() => tripDates[0] || '2026-09-18');
 
   useEffect(() => {
     if (!tripDates.includes(selectedDate)) {
-      setSelectedDate(tripDates[0] || '2026-09-23');
+      setSelectedDate(tripDates[0] || '2026-09-18');
     }
   }, [tripDates, selectedDate]);
 
@@ -474,17 +429,12 @@ export default function App() {
   }, [sheetUrl]);
 
   useEffect(() => {
-    localStorage.setItem('trailsync_solar_overrides', JSON.stringify(customSun));
-  }, [customSun]);
-
-  useEffect(() => {
     localStorage.setItem('trailsync_settings', JSON.stringify(settings));
   }, [settings]);
 
-  // Dynamic sunrise / sunset
+  // Sun calculation using MDT (-6 offset)
   const currentSun: DaySunData = useMemo(() => {
-    if (customSun[selectedDate]) return customSun[selectedDate];
-    const calc = calculateSolarTimes(selectedDate);
+    const calc = calculateSolarTimes(selectedDate, 39.7392, -104.9903, -6);
     return {
       label: formatDateDisplay(selectedDate),
       sunrise: calc.sunrise,
@@ -493,15 +443,14 @@ export default function App() {
       sunsetMin: calc.sunsetMin,
       isManual: false,
     };
-  }, [selectedDate, customSun]);
+  }, [selectedDate]);
 
   const timelineStartMin = 6 * 60;
-  const timelineEndMin = 18 * 60;
+  const timelineEndMin = 21 * 60;
   const totalTimelineMinutes = timelineEndMin - timelineStartMin;
   const timelinePixelHeight = 720;
   const minToPx = (m: number) => ((m - timelineStartMin) / totalTimelineMinutes) * timelinePixelHeight;
 
-  // Filter items for current selected date
   const currentDayItems = useMemo(() => {
     return itinerary
       .filter((item) => item.date === selectedDate)
@@ -597,7 +546,6 @@ export default function App() {
     };
   }, [currentDayItems]);
 
-  // Activity styling tokens
   const getActivityMeta = (type: string) => {
     switch (type) {
       case 'lodging':
@@ -658,7 +606,6 @@ export default function App() {
     if (idx < tripDates.length - 1) setSelectedDate(tripDates[idx + 1]);
   };
 
-  // Ripple / Cascade engine
   const cascadeSchedule = (updatedItem: ItineraryStop, fullList: ItineraryStop[]) => {
     if (!settings.cascadeDownstream) {
       return fullList.map((it) => (it.id === updatedItem.id ? updatedItem : it));
@@ -716,7 +663,7 @@ export default function App() {
     return [...otherDays, ...updatedDayItems];
   };
 
-  // Google Sheets & Ingestion Handler
+  // Complete refresh and clean ingestion from Sheet Rows
   const handleIngestRows = (rows: Record<string, string>[]) => {
     let lastValidDate = '2026-09-18';
 
@@ -777,8 +724,9 @@ export default function App() {
         const notes = r.notes || r.description || '';
         const insights = r.insights ? r.insights.split(/[|;]/).map((s) => s.trim()) : [];
 
+        // Stable ID based on date and index to cleanly overwrite rather than stacking duplicates
         return {
-          id: r.id || `stop-sheet-${idx}-${Date.now()}`,
+          id: `stop-${date}-${idx}`,
           date,
           destination,
           address,
@@ -798,9 +746,10 @@ export default function App() {
       });
 
     if (formatted.length > 0) {
+      // Overwrite state and local storage completely with freshly synced rows
       setItinerary(formatted);
       setSelectedDate(formatted[0].date);
-      setSyncStatus(`Successfully loaded ${formatted.length} stops!`);
+      setSyncStatus(`Successfully loaded ${formatted.length} stops! Itinerary updated.`);
     } else {
       setSyncStatus('No valid stops found in the provided data.');
     }
@@ -811,7 +760,9 @@ export default function App() {
     setIsSyncing(true);
     setSyncStatus('Connecting to Google Sheets CSV...');
     try {
-      const response = await fetch(sheetUrl);
+      // Add cache buster query parameter so Google Sheet updates are pulled immediately
+      const fetchUrl = sheetUrl.includes('?') ? `${sheetUrl}&_t=${Date.now()}` : `${sheetUrl}?_t=${Date.now()}`;
+      const response = await fetch(fetchUrl, { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
       const text = await response.text();
       const parsed = parseCSV(text);
@@ -840,7 +791,6 @@ export default function App() {
             setSyncStatus(`Restored ${json.length} stops from JSON backup.`);
           } else if (json.itinerary) {
             setItinerary(json.itinerary);
-            if (json.customSun) setCustomSun(json.customSun);
             if (json.itinerary[0]?.date) setSelectedDate(json.itinerary[0].date);
             setSyncStatus('Restored complete itinerary workspace from backup.');
           }
@@ -860,7 +810,6 @@ export default function App() {
       version: '2.0',
       exportedAt: new Date().toISOString(),
       itinerary,
-      customSun,
       settings,
     };
     const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
@@ -872,7 +821,6 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  // Open Add Modal
   const handleOpenAddModal = () => {
     let defaultArrival = '11:00';
     let defaultDepart = '11:45';
@@ -904,7 +852,6 @@ export default function App() {
     setIsAddMode(true);
   };
 
-  // Auto Resolve Overlaps
   const handleAutoResolve = () => {
     if (overlaps.length === 0) return;
     const conflict = overlaps[0];
@@ -924,7 +871,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#E5E9E2] text-slate-900 flex justify-center p-0 sm:p-4 font-sans antialiased selection:bg-[#234E42] selection:text-white">
-      {/* Hidden File Input for CSV / JSON */}
       <input
         type="file"
         ref={fileInputRef}
@@ -933,22 +879,20 @@ export default function App() {
         className="hidden"
       />
 
-      {/* Mobile Shell Frame */}
       <div className="w-full max-w-md bg-[#F4F6F0] text-slate-900 shadow-2xl flex flex-col relative overflow-hidden sm:rounded-[42px] border-0 sm:border-8 sm:border-slate-800 h-[100dvh] sm:h-[870px]">
-        
         {/* Status Bar */}
         <div className="bg-[#F4F6F0] px-6 pt-3 pb-1 flex items-center justify-between text-xs tracking-tight shrink-0 select-none">
           <span className="font-semibold text-sm text-slate-800">12:14</span>
           <div className="w-24 h-4 bg-slate-900 rounded-full mx-auto hidden sm:block"></div>
           <div className="flex items-center space-x-1.5 text-slate-700">
-            <span className="text-[11px] font-bold">Offline Ready</span>
+            <span className="text-[11px] font-bold">MDT (UTC-6)</span>
             <div className="w-5 h-2.5 border border-slate-700 rounded-xs p-0.5 flex items-center">
               <div className="h-full w-3.5 bg-slate-900 rounded-2xs"></div>
             </div>
           </div>
         </div>
 
-        {/* Streamlined Top Header */}
+        {/* Top Header */}
         <div className="px-5 pt-2 pb-3 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2.5">
@@ -1008,13 +952,13 @@ export default function App() {
                   {currentSun.label}
                 </span>
                 <div className="flex items-center space-x-2 text-[10px] text-slate-500 font-medium mt-0.5">
-                  <span className="flex items-center space-x-1 text-amber-700 font-semibold">
+                  <span className="flex items-center space-x-1 text-amber-700 font-semibold" title="Sunrise in MDT">
                     <Sun className="w-3 h-3 text-amber-500" />
-                    <span>{currentSun.sunrise}</span>
+                    <span>{currentSun.sunrise} MDT</span>
                   </span>
-                  <span className="flex items-center space-x-1 text-indigo-700 font-semibold">
+                  <span className="flex items-center space-x-1 text-indigo-700 font-semibold" title="Sunset in MDT">
                     <Moon className="w-3 h-3 text-indigo-500" />
-                    <span>{currentSun.sunset}</span>
+                    <span>{currentSun.sunset} MDT</span>
                   </span>
                 </div>
               </div>
@@ -1107,14 +1051,12 @@ export default function App() {
                 const transitMeta = getTransitMeta(item.travelMode);
                 const TransitIcon = transitMeta.icon;
 
-                // Proportional bar
                 const maxScale = 90;
                 const travelPct = Math.min(50, (travelMin / maxScale) * 100);
                 const stayPct = Math.min(100 - travelPct, (Math.max(1, durationMin) / maxScale) * 100);
 
                 return (
                   <React.Fragment key={item.id}>
-                    {/* Inter-card travel connector */}
                     {index > 0 && travelMin > 0 && (
                       <div className="flex items-center space-x-2 py-1 pl-7 text-slate-600 text-xs font-medium">
                         <div className="w-0.5 h-6 bg-slate-300 ml-1.5 rounded-full"></div>
@@ -1127,7 +1069,6 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* Main Card */}
                     <div
                       onClick={() => setSelectedItem(item)}
                       className={`p-3.5 rounded-2xl bg-white border transition-all cursor-pointer shadow-xs hover:shadow-md group ${
@@ -1179,7 +1120,7 @@ export default function App() {
                           </h3>
 
                           <p className="text-xs text-slate-500 truncate mt-0.5">
-                            {item.address || 'Colorado Waypoint'}
+                            {item.address || 'Waypoint Location'}
                           </p>
 
                           <div className="flex items-center space-x-2.5 text-xs text-slate-600 font-medium mt-2">
@@ -1230,7 +1171,7 @@ export default function App() {
                 className="relative bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
                 style={{ height: `${timelinePixelHeight}px` }}
               >
-                {/* Sunrise Shading */}
+                {/* Sunrise Shading in MDT */}
                 {settings.showSunriseSunset && currentSun.sunriseMin > timelineStartMin && (
                   <div
                     className="absolute left-0 right-0 top-0 bg-slate-950/10 border-b border-amber-300 pointer-events-none z-1 flex items-end px-3 pb-1"
@@ -1238,13 +1179,26 @@ export default function App() {
                   >
                     <span className="text-[10px] font-semibold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded flex items-center space-x-1">
                       <Sun className="w-3 h-3 text-amber-600" />
-                      <span>Sunrise {currentSun.sunrise}</span>
+                      <span>Sunrise {currentSun.sunrise} MDT</span>
+                    </span>
+                  </div>
+                )}
+
+                {/* Sunset Shading in MDT */}
+                {settings.showSunriseSunset && currentSun.sunsetMin < timelineEndMin && (
+                  <div
+                    className="absolute left-0 right-0 bottom-0 bg-indigo-950/10 border-t border-indigo-300 pointer-events-none z-1 flex items-start px-3 pt-1"
+                    style={{ top: `${minToPx(currentSun.sunsetMin)}px`, height: `${minToPx(timelineEndMin) - minToPx(currentSun.sunsetMin)}px` }}
+                  >
+                    <span className="text-[10px] font-semibold text-indigo-800 bg-indigo-100 px-1.5 py-0.5 rounded flex items-center space-x-1">
+                      <Moon className="w-3 h-3 text-indigo-600" />
+                      <span>Sunset {currentSun.sunset} MDT</span>
                     </span>
                   </div>
                 )}
 
                 {/* Hourly Lines */}
-                {Array.from({ length: 13 }).map((_, idx) => {
+                {Array.from({ length: 16 }).map((_, idx) => {
                   const hour = 6 + idx;
                   const minuteVal = hour * 60;
                   const topPos = minToPx(minuteVal);
@@ -1278,7 +1232,6 @@ export default function App() {
                   const transitMeta = getTransitMeta(item.travelMode);
                   const TransitIcon = transitMeta.icon;
 
-                  // Travel connector
                   const prevStop = index > 0 ? currentDayItems[index - 1] : null;
                   let travelConn = null;
                   if (prevStop) {
@@ -1469,7 +1422,6 @@ export default function App() {
         {editingItem && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
-              
               <div className="px-5 py-3.5 bg-[#F4F6F0] border-b border-slate-200 flex items-center justify-between shrink-0">
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm">
@@ -1496,7 +1448,7 @@ export default function App() {
                     onChange={(e) =>
                       setEditingItem({ ...editingItem, destination: e.target.value })
                     }
-                    placeholder="e.g. Ouray Hot Springs Pool"
+                    placeholder="e.g. Denver International Airport"
                     className="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234E42] text-xs font-semibold text-slate-900"
                   />
                 </div>
@@ -1511,12 +1463,12 @@ export default function App() {
                     onChange={(e) =>
                       setEditingItem({ ...editingItem, address: e.target.value })
                     }
-                    placeholder="e.g. US-550, Red Mountain Pass, CO"
+                    placeholder="e.g. Denver, CO"
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234E42] text-xs text-slate-900"
                   />
                 </div>
 
-                {/* Transit selector */}
+                {/* Transit Selector */}
                 <div className="bg-emerald-50/70 p-3.5 rounded-2xl border border-[#234E42]/20 space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="font-bold text-[#1E4238] flex items-center space-x-1.5">
@@ -1575,7 +1527,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Times & durations */}
+                {/* Times & Durations */}
                 <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">
@@ -1817,7 +1769,7 @@ export default function App() {
           </div>
         )}
 
-        {/* MODAL 2: DETAIL BOTTOM SHEET */}
+        {/* MODAL 2: CARD DETAIL BOTTOM SHEET */}
         {selectedItem && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
@@ -1980,7 +1932,7 @@ export default function App() {
                   <label className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80 cursor-pointer">
                     <div>
                       <span className="font-bold text-slate-800 block">Sunrise & sunset timeline blocks</span>
-                      <span className="text-[11px] text-slate-500">Show golden dawn & dusk hours</span>
+                      <span className="text-[11px] text-slate-500">Show golden dawn & dusk hours in MDT</span>
                     </div>
                     <input
                       type="checkbox"
@@ -2005,13 +1957,13 @@ export default function App() {
                   <button
                     onClick={() => {
                       setItinerary(INITIAL_DATA);
-                      setSelectedDate('2026-09-23');
+                      setSelectedDate('2026-09-18');
                       setShowSettingsModal(false);
                     }}
                     className="w-full py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer"
                   >
                     <RotateCcw className="w-4 h-4" />
-                    <span>Reset to Telluride Defaults</span>
+                    <span>Reset to Departure Defaults</span>
                   </button>
                 </div>
               </div>
@@ -2106,7 +2058,7 @@ export default function App() {
 
               <div className="space-y-2 max-h-72 overflow-y-auto">
                 {tripDates.map((d) => {
-                  const s = customSun[d] || calculateSolarTimes(d);
+                  const s = calculateSolarTimes(d, 39.7392, -104.9903, -6);
                   const isSelected = d === selectedDate;
                   return (
                     <button
@@ -2124,7 +2076,7 @@ export default function App() {
                       <div>
                         <span className="font-bold text-sm block">{formatDateDisplay(d)}</span>
                         <span className={`text-[11px] ${isSelected ? 'text-emerald-100' : 'text-slate-500'}`}>
-                          Sunrise {s.sunrise} • Sunset {s.sunset}
+                          Sunrise {s.sunrise} MDT • Sunset {s.sunset} MDT
                         </span>
                       </div>
                       {isSelected && <Check className="w-5 h-5 text-white" />}
