@@ -1198,18 +1198,17 @@ export default function App() {
       {/* Mobile Shell Frame */}
       <div className="w-full max-w-md bg-[#F4F6F0] text-slate-900 shadow-2xl flex flex-col relative overflow-hidden sm:rounded-[42px] border-0 sm:border-8 sm:border-slate-800 h-[100dvh] sm:h-[870px]">
         
-        {/* Status Bar
+        {/* Status Bar */}
         <div className="bg-[#F4F6F0] px-6 pt-3 pb-1 flex items-center justify-between text-xs tracking-tight shrink-0 select-none">
-          <span className="font-semibold text-sm text-slate-800">12:14</span>
+          <span className="font-semibold text-sm text-slate-800"></span>
           <div className="w-24 h-4 bg-slate-900 rounded-full mx-auto hidden sm:block"></div>
           <div className="flex items-center space-x-1.5 text-slate-700">
-            <span className="text-[11px] font-bold">5G</span>
+            <span className="text-[11px] font-bold"></span>
             <div className="w-5 h-2.5 border border-slate-700 rounded-xs p-0.5 flex items-center">
               <div className="h-full w-3.5 bg-slate-900 rounded-2xs"></div>
             </div>
           </div>
         </div>
-        */}
 
         {/* Top Header */}
         <div className="px-5 pt-2 pb-3 shrink-0">
