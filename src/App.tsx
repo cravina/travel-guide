@@ -2184,10 +2184,22 @@ export default function App() {
                 </div>
 
                 {selectedItem.address && (
-                  <div className="flex items-start space-x-2 text-slate-600">
-                    <MapPin className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                    <span>{selectedItem.address}</span>
-                  </div>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      selectedItem.lat && selectedItem.lng
+                      ? `${selectedItem.lat},${selectedItem.lng}`
+                      : `${selectedItem.address}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start space-x-2 text-slate-600 hover:text-[#234E42] group transition-colors cursor-pointer"
+                    title="Open in Maps"
+                  >
+                    <MapPin className="w-4 h-4 text-rose-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                    <span className="underline decoration-slate-300 underline-offset-2 group-hover:decoration-[#234E42]">
+                      {selectedItem.address}
+                    </span>
+                  </a>
                 )}
 
                 {/* Display Tags */}
