@@ -1220,7 +1220,7 @@ export default function App() {
                 </svg>
               </div>
               <span className="font-serif font-bold text-lg text-[#1E4238] tracking-tight">
-                MidPoint Journey
+                Laag-Laag Dot Com
               </span>
             </div>
 
