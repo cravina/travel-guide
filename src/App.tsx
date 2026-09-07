@@ -383,13 +383,13 @@ const KNOWN_SUN_DATA: Record<string, SunData> = {
 
 // Robust time to minutes supporting both "10:10 AM" and "10:10"
 const toMinutes = (timeStr: string): number => {
-  if (!timeStr || typeof timeStr !== 'string') return 0;
-  const str = timeStr.trim();
+  if (!timeStr) return 0;
+  const str = timeStr.toString().trim();
   const ampmMatch = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
   if (ampmMatch) {
     let h = parseInt(ampmMatch, 10);
     const m = parseInt(ampmMatch, 10);
-    const ampm = ampmMatch?.toUpperCase();
+    const ampm = ampmMatch ? ampmMatch.toUpperCase() : '';
     if (ampm === 'PM' && h < 12) h += 12;
     if (ampm === 'AM' && h === 12) h = 0;
     return (isNaN(h) ? 0 : h) * 60 + (isNaN(m) ? 0 : m);
@@ -492,14 +492,15 @@ const getSunDataForDate = (dateStr: string): SunData => {
 
 const normalizeTimeTo24h = (raw: string | undefined, fallback = '08:00'): string => {
   if (!raw || typeof raw !== 'string') return fallback;
-  const str = raw.trim().toUpperCase();
+  const str = raw.trim();
   const ampmMatch = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
   if (ampmMatch) {
     let h = parseInt(ampmMatch, 10);
     const m = ampmMatch;
-    const isPM = ampmMatch?.toUpperCase() === 'PM';
+    const ampm = ampmMatch ? ampmMatch.toUpperCase() : '';
+    const isPM = ampm === 'PM';
     if (isPM && h < 12) h += 12;
-    if (!isPM && ampmMatch && h === 12) h = 0;
+    if (!isPM && ampm === 'AM' && h === 12) h = 0;
     return `${h.toString().padStart(2, '0')}:${m}`;
   }
   const standardMatch = str.match(/^(\d{1,2}):(\d{2})/);
