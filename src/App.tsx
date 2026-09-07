@@ -53,6 +53,8 @@ export interface ItineraryItem {
   hardTime: HardTimeOption;
   timeSpentMinutes?: number;
   timeError?: string | null;
+  lat?: number;
+  lng?: number;
 }
 
 export interface TransitMeta {
@@ -149,7 +151,7 @@ const getTransitMeta = (mode: TransitMode = 'drive'): TransitMeta => {
     case 'fly':
       return {
         id: 'fly',
-        label: 'fly',
+        label: 'flight',
         title: 'Flight',
         icon: Plane,
         color: 'text-indigo-700',
@@ -171,7 +173,93 @@ const getTransitMeta = (mode: TransitMode = 'drive'): TransitMeta => {
 };
 
 const INITIAL_DATA: ItineraryItem[] = [
-  // Day 1: Wed Sep 23
+  // Day 1: Fri Sep 18 (Flight & Arrival)
+  {
+    id: 'stop-day1-1',
+    date: '2026-09-18',
+    destination: 'Home',
+    address: 'Palm Bay, FL',
+    arrivalTime: '07:00',
+    departTime: '09:00',
+    travelMinutes: 0,
+    travelMode: 'drive',
+    activityType: 'sightseeing',
+    notes: 'Depart home in Palm Bay; drive to Park N Go Orlando.',
+    insights: ['Allow buffer for morning highway traffic'],
+    tags: ['Departure', 'Prep'],
+    image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=400&q=80',
+    hardTime: 'departure',
+    timeSpentMinutes: 120,
+  },
+  {
+    id: 'stop-day1-2',
+    date: '2026-09-18',
+    destination: 'Park N Go Orlando',
+    address: '6100 S Semoran Blvd, Orlando, FL 32822',
+    arrivalTime: '10:10',
+    departTime: '10:30',
+    travelMinutes: 70, // 1:10
+    travelMode: 'drive',
+    activityType: 'sightseeing',
+    notes: 'Drop off car at Park N Go Orlando & take shuttle to MCO.',
+    insights: ['Shuttle runs every 5–7 minutes to Terminal A'],
+    tags: ['Parking', 'Shuttle'],
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80',
+    hardTime: 'arrival',
+    timeSpentMinutes: 20,
+  },
+  {
+    id: 'stop-day1-3',
+    date: '2026-09-18',
+    destination: 'MCO Terminal A',
+    address: 'Orlando International Airport (MCO)',
+    arrivalTime: '10:45',
+    departTime: '11:45',
+    travelMinutes: 15,
+    travelMode: 'drive',
+    activityType: 'sightseeing',
+    notes: 'Terminal Check-in & TSA Security Screening.',
+    insights: ['TSA PreCheck line available at West Checkpoint'],
+    tags: ['Airport', 'TSA'],
+    image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=400&q=80',
+    hardTime: 'none',
+    timeSpentMinutes: 60,
+  },
+  {
+    id: 'stop-day1-4',
+    date: '2026-09-18',
+    destination: 'Frontier Gate',
+    address: 'MCO Concourse Gate',
+    arrivalTime: '12:00',
+    departTime: '13:28',
+    travelMinutes: 15,
+    travelMode: 'driving',
+    activityType: 'driving',
+    notes: 'Frontier flight boarding area.',
+    insights: ['Gate closes 15 minutes prior to departure'],
+    tags: ['Boarding', 'Gate'],
+    image: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=400&q=80',
+    hardTime: 'none',
+    timeSpentMinutes: 88,
+  },
+  {
+    id: 'stop-day1-5',
+    date: '2026-09-18',
+    destination: 'Denver International Airport',
+    address: '8500 Peña Blvd, Denver, CO 80249',
+    arrivalTime: '15:52',
+    departTime: '16:12',
+    travelMinutes: 144, // 2:24 (4hr flight minus 2hr EDT->MDT offset)
+    travelMode: 'fly',
+    activityType: 'driving',
+    notes: 'Flight is 4+hours. Now in MDT. Pick up rental vehicle at concourse shuttle.',
+    insights: ['Pick up rental vehicle at concourse shuttle', 'Elevation 5,430 ft'],
+    tags: ['Arrival', 'MDT'],
+    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
+    hardTime: 'arrival',
+    timeSpentMinutes: 20,
+  },
+  // Day 2: Wed Sep 23 (Mountain Highlights)
   {
     id: 'stop-1',
     date: '2026-09-23',
@@ -191,6 +279,7 @@ const INITIAL_DATA: ItineraryItem[] = [
     tags: ['Lodging', 'Check Out', 'Prep'],
     image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=400&q=80',
     hardTime: 'departure',
+    timeSpentMinutes: 5,
   },
   {
     id: 'stop-2',
@@ -211,6 +300,7 @@ const INITIAL_DATA: ItineraryItem[] = [
     tags: ['Scenic View', 'Photo Stop', 'Roadside'],
     image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80',
     hardTime: 'arrival',
+    timeSpentMinutes: 10,
   },
   {
     id: 'stop-3',
@@ -231,6 +321,7 @@ const INITIAL_DATA: ItineraryItem[] = [
     tags: ['Breakfast', 'Victorian Town', 'Coffee'],
     image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=400&q=80',
     hardTime: 'none',
+    timeSpentMinutes: 39,
   },
   {
     id: 'stop-4',
@@ -251,6 +342,7 @@ const INITIAL_DATA: ItineraryItem[] = [
     tags: ['Waterfall', 'Suspended Walkway', 'Gorge'],
     image: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=400&q=80',
     hardTime: 'arrival',
+    timeSpentMinutes: 60,
   },
   {
     id: 'stop-5',
@@ -271,72 +363,7 @@ const INITIAL_DATA: ItineraryItem[] = [
     tags: ['Waterfall', 'Short Trail', 'Red Rocks'],
     image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=400&q=80',
     hardTime: 'none',
-  },
-  // Day 2: Thu Sep 24
-  {
-    id: 'stop-6',
-    date: '2026-09-24',
-    destination: 'Ouray Hot Springs Pool',
-    address: 'Ouray, CO',
-    arrivalTime: '07:30',
-    departTime: '08:15',
-    travelMinutes: 0,
-    travelMode: 'drive',
-    activityType: 'lodging',
-    notes: 'Morning thermal mineral pool soak with views of Mount Abrams.',
-    insights: ['Lockers available with admission wristband', 'Towel rentals at front desk'],
-    tags: ['Hot Springs', 'Thermal', 'Morning'],
-    image: 'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=400&q=80',
-    hardTime: 'departure',
-  },
-  {
-    id: 'stop-7',
-    date: '2026-09-24',
-    destination: 'Million Dollar Highway Overlook',
-    address: 'US-550, Red Mountain Pass, CO',
-    arrivalTime: '08:45',
-    departTime: '09:00',
-    travelMinutes: 30,
-    travelMode: 'drive',
-    activityType: 'sightseeing',
-    notes: 'Breathtaking alpine switchbacks, Idarado mine ruins, and red rock peaks.',
-    insights: ['Paved pullover with room for 8 vehicles', 'Elevation 11,018 ft'],
-    tags: ['Scenic Pass', 'Photo Stop', 'US-550'],
-    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80',
-    hardTime: 'none',
-  },
-  {
-    id: 'stop-8',
-    date: '2026-09-24',
-    destination: 'Silverton Historic Mining Town',
-    address: 'Blair St, Silverton, CO',
-    arrivalTime: '09:40',
-    departTime: '10:35',
-    travelMinutes: 40,
-    travelMode: 'drive',
-    activityType: 'food',
-    notes: 'Historic mining settlement stroll; grab espresso and pastries.',
-    insights: ['Narrow gauge steam train stops in town at 10:15 AM'],
-    tags: ['Historic Town', 'Espresso', 'Mining'],
-    image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=400&q=80',
-    hardTime: 'none',
-  },
-  // Day 3: Fri Sep 25
-  {
-    id: 'stop-9',
-    date: '2026-09-25',
-    destination: 'Telluride Free Gondola',
-    address: 'San Juan Ave, Telluride, CO',
-    arrivalTime: '09:00',
-    departTime: '09:45',
-    travelMinutes: 0,
-    travelMode: 'drive',
-    activityType: 'sightseeing',
-    notes: 'Scenic aerial gondola ride across the mountain ridge to Mountain Village.',
-    insights: ['Free pet-friendly gondola cars available in cycle'],
-    tags: ['Gondola', 'Views', 'Telluride'],
-    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
-    hardTime: 'none',
+    timeSpentMinutes: 40,
   }
 ];
 
@@ -345,15 +372,33 @@ const DEFAULT_SHEET_CSV_URL =
 
 const KNOWN_SUN_DATA: Record<string, SunData> = {
   '2026-09-18': { label: 'Fri, Sep 18', sunrise: '6:20 AM', sunset: '7:13 PM', sunriseMin: 380, sunsetMin: 1153 },
+  '2026-09-19': { label: 'Sat, Sep 19', sunrise: '6:21 AM', sunset: '7:11 PM', sunriseMin: 381, sunsetMin: 1151 },
+  '2026-09-20': { label: 'Sun, Sep 20', sunrise: '6:22 AM', sunset: '7:10 PM', sunriseMin: 382, sunsetMin: 1150 },
+  '2026-09-21': { label: 'Mon, Sep 21', sunrise: '6:22 AM', sunset: '7:08 PM', sunriseMin: 382, sunsetMin: 1148 },
+  '2026-09-22': { label: 'Tue, Sep 22', sunrise: '6:23 AM', sunset: '7:07 PM', sunriseMin: 383, sunsetMin: 1147 },
   '2026-09-23': { label: 'Wed, Sep 23', sunrise: '6:23 AM', sunset: '7:08 PM', sunriseMin: 383, sunsetMin: 1148 },
   '2026-09-24': { label: 'Thu, Sep 24', sunrise: '6:24 AM', sunset: '7:06 PM', sunriseMin: 384, sunsetMin: 1146 },
   '2026-09-25': { label: 'Fri, Sep 25', sunrise: '6:25 AM', sunset: '7:05 PM', sunriseMin: 385, sunsetMin: 1145 },
 };
 
+// Robust time to minutes supporting both "10:10 AM" and "10:10"
 const toMinutes = (timeStr: string): number => {
-  if (!timeStr) return 0;
-  const [h, m] = timeStr.split(':').map(Number);
-  return (h || 0) * 60 + (m || 0);
+  if (!timeStr || typeof timeStr !== 'string') return 0;
+  const str = timeStr.trim();
+  const ampmMatch = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
+  if (ampmMatch) {
+    let h = parseInt(ampmMatch, 10);
+    const m = parseInt(ampmMatch, 10);
+    const ampm = ampmMatch?.toUpperCase();
+    if (ampm === 'PM' && h < 12) h += 12;
+    if (ampm === 'AM' && h === 12) h = 0;
+    return (isNaN(h) ? 0 : h) * 60 + (isNaN(m) ? 0 : m);
+  }
+  const parts = str.split(':').map((p) => parseInt(p.replace(/[^0-9]/g, ''), 10));
+  if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts)) {
+    return parts[0] * 60 + parts;
+  }
+  return 0;
 };
 
 const toTimeString = (min: number): string => {
@@ -364,6 +409,7 @@ const toTimeString = (min: number): string => {
 };
 
 const formatTime12h = (min: number): string => {
+  if (isNaN(min)) return '8:00 AM';
   const norm = ((min % 1440) + 1440) % 1440;
   const h = Math.floor(norm / 60);
   const m = norm % 60;
@@ -373,16 +419,17 @@ const formatTime12h = (min: number): string => {
 };
 
 const formatDurationColon = (min: number): string => {
-  if (min <= 0) return '0:00';
+  if (!min || isNaN(min) || min <= 0) return '0:00';
   const h = Math.floor(min / 60);
-  const m = min % 60;
+  const m = Math.round(min % 60);
   return `${h}:${m.toString().padStart(2, '0')}`;
 };
 
 const formatDurationWords = (min: number): string => {
-  if (min <= 0) return '0 min';
-  const h = Math.floor(min / 60);
-  const m = min % 60;
+  const mVal = typeof min === 'number' && !isNaN(min) ? Math.round(min) : 0;
+  if (mVal <= 0) return '0 min';
+  const h = Math.floor(mVal / 60);
+  const m = mVal % 60;
   if (h === 0) return `${m}m`;
   return `${h}h ${m > 0 ? `${m}m` : ''}`.trim();
 };
@@ -446,31 +493,35 @@ const getSunDataForDate = (dateStr: string): SunData => {
 const normalizeTimeTo24h = (raw: string | undefined, fallback = '08:00'): string => {
   if (!raw || typeof raw !== 'string') return fallback;
   const str = raw.trim().toUpperCase();
-  const ampmMatch = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
+  const ampmMatch = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
   if (ampmMatch) {
     let h = parseInt(ampmMatch, 10);
-    const m = ampmMatch[2];
-    const isPM = ampmMatch[3].toUpperCase() === 'PM';
+    const m = ampmMatch;
+    const isPM = ampmMatch?.toUpperCase() === 'PM';
     if (isPM && h < 12) h += 12;
-    if (!isPM && h === 12) h = 0;
+    if (!isPM && ampmMatch && h === 12) h = 0;
     return `${h.toString().padStart(2, '0')}:${m}`;
   }
   const standardMatch = str.match(/^(\d{1,2}):(\d{2})/);
   if (standardMatch) {
     const h = parseInt(standardMatch, 10);
-    const m = standardMatch[2];
+    const m = standardMatch;
     return `${h.toString().padStart(2, '0')}:${m}`;
   }
   return fallback;
 };
 
-// Flexible duration & minute parsing (handles "1:10" -> 70, "45" -> 45, "0:20" -> 20)
-const parseMinutesFlexible = (raw: string | number | undefined): number => {
+// Flexible duration parsing handling "1:10" -> 70, "0:20" -> 20, "45" -> 45, or numbers
+const parseMinutesFlexible = (raw: string | number | undefined | null): number => {
   if (raw === undefined || raw === null) return 0;
+  if (typeof raw === 'number') return isNaN(raw) ? 0 : raw;
   const str = raw.toString().trim();
+  if (!str) return 0;
   if (str.includes(':')) {
-    const parts = str.split(':').map(Number);
-    if (parts.length >= 2) return (parts[0] || 0) * 60 + (parts || 0);
+    const parts = str.split(':').map((p) => parseInt(p.replace(/[^0-9]/g, ''), 10));
+    if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts)) {
+      return parts[0] * 60 + parts;
+    }
   }
   const num = parseInt(str.replace(/[^0-9]/g, ''), 10);
   return isNaN(num) ? 0 : num;
@@ -486,40 +537,74 @@ const normalizeDateToISO = (raw: string, fallbackYear = 2026): string => {
   const slashMatch = str.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
   if (slashMatch) {
     const month = parseInt(slashMatch, 10).toString().padStart(2, '0');
-    const day = parseInt(slashMatch[2], 10).toString().padStart(2, '0');
-    let year = slashMatch[3] ? parseInt(slashMatch[3], 10) : fallbackYear;
+    const day = parseInt(slashMatch, 10).toString().padStart(2, '0');
+    let year = slashMatch ? parseInt(slashMatch, 10) : fallbackYear;
     if (year < 100) year += 2000;
     return `${year}-${month}-${day}`;
   }
-  return `${fallbackYear}-09-18`;
+  return str;
 };
 
+// RFC-compliant CSV & TSV Parser with automated delimiter detection
 function parseCSV(text: string): Record<string, string>[] {
-  const lines = text.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map((h) => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
-  const results: Record<string, string>[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const rawLine = lines[i];
-    if (!rawLine.trim()) continue;
-    const row: string[] = [];
-    let insideQuote = false;
-    let entry = '';
-    for (let charIdx = 0; charIdx < rawLine.length; charIdx++) {
-      const c = rawLine[charIdx];
-      if (c === '"') {
-        insideQuote = !insideQuote;
-      } else if (c === ',' && !insideQuote) {
-        row.push(entry.trim().replace(/^["']|["']$/g, ''));
-        entry = '';
+  const cleaned = text.trim();
+  if (!cleaned) return [];
+
+  // Detect delimiter (\t or ,)
+  const firstLine = cleaned.split(/\r?\n/)[0] || '';
+  const delimiter = firstLine.includes('\t') ? '\t' : ',';
+
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentField = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < cleaned.length; i++) {
+    const char = cleaned[i];
+    const nextChar = cleaned[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        currentField += '"';
+        i++;
       } else {
-        entry += c;
+        inQuotes = !inQuotes;
       }
+    } else if (char === delimiter && !inQuotes) {
+      currentRow.push(currentField.trim().replace(/^["']|["']$/g, ''));
+      currentField = '';
+    } else if ((char === '\r' || char === '\n') && !inQuotes) {
+      if (char === '\r' && nextChar === '\n') {
+        i++;
+      }
+      currentRow.push(currentField.trim().replace(/^["']|["']$/g, ''));
+      if (currentRow.some((f) => f.length > 0)) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentField = '';
+    } else {
+      currentField += char;
     }
-    row.push(entry.trim().replace(/^["']|["']$/g, ''));
+  }
+
+  if (currentField.length > 0 || currentRow.length > 0) {
+    currentRow.push(currentField.trim().replace(/^["']|["']$/g, ''));
+    if (currentRow.some((f) => f.length > 0)) {
+      rows.push(currentRow);
+    }
+  }
+
+  if (rows.length < 2) return [];
+
+  const headers = rows[0].map((h) => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+  const results: Record<string, string>[] = [];
+
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r];
     const obj: Record<string, string> = {};
     headers.forEach((hdr, idx) => {
-      obj[hdr] = row[idx] || '';
+      obj[hdr] = row[idx] !== undefined ? row[idx] : '';
     });
     results.push(obj);
   }
@@ -669,6 +754,7 @@ export default function App() {
     return set;
   }, [overlaps]);
 
+  // Summary Metrics (guaranteed NaN-free)
   const summaryStats = useMemo(() => {
     let totalDriveMin = 0;
     let totalHikeTransitMin = 0;
@@ -685,9 +771,16 @@ export default function App() {
       lodging: 0,
     };
 
-    currentDayItems.forEach((item) => {
+    currentDayItems.forEach((item, idx) => {
       const mode = item.travelMode || 'drive';
-      const travelM = item.travelMinutes || 0;
+      let travelM = parseMinutesFlexible(item.travelMinutes);
+
+      // If travelMinutes was left blank, check schedule gap from previous waypoint
+      if (travelM <= 0 && idx > 0) {
+        const prev = currentDayItems[idx - 1];
+        const gap = toMinutes(item.arrivalTime) - toMinutes(prev.departTime);
+        if (gap > 0) travelM = gap;
+      }
 
       if (mode === 'drive') totalDriveMin += travelM;
       else if (mode === 'hike') totalHikeTransitMin += travelM;
@@ -696,7 +789,9 @@ export default function App() {
 
       activityMinutes.driving += travelM;
 
-      const spent = Math.max(0, toMinutes(item.departTime) - toMinutes(item.arrivalTime));
+      const arrM = toMinutes(item.arrivalTime);
+      const depM = toMinutes(item.departTime);
+      const spent = Math.max(0, depM - arrM);
       totalTimeSpentMin += spent;
 
       if (item.activityType === 'hiking') {
@@ -720,7 +815,7 @@ export default function App() {
       totalWalkHikingMin: totalWalkHikingActivityMin + totalHikeTransitMin,
       totalTimeSpentMin,
       activityMinutes,
-      totalActiveTime: totalActiveTime || 1,
+      totalActiveTime: isNaN(totalActiveTime) || totalActiveTime <= 0 ? 1 : totalActiveTime,
     };
   }, [currentDayItems]);
 
@@ -803,7 +898,7 @@ export default function App() {
         const curr = updatedDayItems[i];
 
         const prevDepartMin = toMinutes(prev.departTime);
-        const travelMin = curr.travelMinutes || 0;
+        const travelMin = parseMinutesFlexible(curr.travelMinutes);
         const projectedArrivalMin = prevDepartMin + travelMin;
 
         const currentDuration = Math.max(
@@ -876,7 +971,7 @@ export default function App() {
     const conflict = overlaps[0];
     const prevDepart = toMinutes(conflict.itemA.departTime);
     const itemBDuration = Math.max(10, toMinutes(conflict.itemB.departTime) - toMinutes(conflict.itemB.arrivalTime));
-    const newArrival = prevDepart + (conflict.itemB.travelMinutes || 5);
+    const newArrival = prevDepart + (parseMinutesFlexible(conflict.itemB.travelMinutes) || 5);
     const newDepart = newArrival + itemBDuration;
 
     const resolvedItem: ItineraryItem = {
@@ -888,7 +983,7 @@ export default function App() {
     setItinerary((prev) => cascadeSchedule(resolvedItem, prev));
   };
 
-  // Google Sheets CSV Importer with immediate localStorage write
+  // Google Sheets CSV Importer
   const handleSyncFromSheet = async () => {
     if (!sheetUrl.trim()) return;
     setIsSyncing(true);
@@ -906,13 +1001,12 @@ export default function App() {
 
       let lastDate = '2026-09-18';
       const parsedStops: ItineraryItem[] = rows
-        .filter((r) => r.destination || r.stop || r.location || r.notes || r['destination notes'])
+        .filter((r) => r.destination || r.stop || r.location || r.notes || r.destinationnotes)
         .map((r, i) => {
-          // Normalize matching on headers regardless of casing, spaces, or hyphens
           const getField = (names: string[]) => {
-            for (const key of Object.keys(r)) {
-              const cleanKey = key.toLowerCase().replace(/[\s_-]/g, '');
-              if (names.includes(cleanKey)) return r[key];
+            for (const name of names) {
+              const clean = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+              if (r[clean] !== undefined && r[clean] !== '') return r[clean];
             }
             return '';
           };
@@ -921,15 +1015,15 @@ export default function App() {
           if (rawDate) lastDate = normalizeDateToISO(rawDate, 2026);
           const date = lastDate;
 
-          const destination = (getField(['destination', 'stop', 'location']) || `Stop ${i + 1}`).trim();
-          const address = (getField(['address']) || destination).trim();
+          const destination = (getField(['destination', 'stop', 'location', 'name']) || `Stop ${i + 1}`).trim();
+          const address = (getField(['address', 'addr']) || destination).trim();
 
-          const rawArr = getField(['arrivaltime', 'arrival', 'start']) || '08:00';
-          const rawDep = getField(['departtime', 'depart', 'end']) || '';
+          const rawArr = getField(['arrivaltime', 'arrival', 'start', 'arr']) || '08:00';
+          const rawDep = getField(['departtime', 'depart', 'end', 'dep']) || '';
           const arrive = normalizeTimeTo24h(rawArr, '08:00');
 
-          const travelMinutes = parseMinutesFlexible(getField(['travelminutes', 'traveltime', 'travel', 'drive']));
-          const timeSpentMinutes = parseMinutesFlexible(getField(['timespent', 'duration', 'timespentminutes']));
+          const travelMinutes = parseMinutesFlexible(getField(['travelminutes', 'traveltime', 'travel', 'drive', 'driving']));
+          const timeSpentMinutes = parseMinutesFlexible(getField(['timespent', 'duration', 'timespentminutes', 'spent']));
 
           let depart = '';
           if (rawDep) {
@@ -941,43 +1035,61 @@ export default function App() {
           }
 
           // Mode detection
-          const rawMode = (getField(['travelmode', 'mode']) || '').toLowerCase();
+          const rawMode = (getField(['travelmode', 'mode', 'transitmode']) || '').toLowerCase();
           let travelMode: TransitMode = 'drive';
           if (['drive', 'hike', 'bike', 'fly'].includes(rawMode)) {
             travelMode = rawMode as TransitMode;
-          } else if (destination.toLowerCase().includes('flight') || destination.toLowerCase().includes('gate') || destination.toLowerCase().includes('airport')) {
+          } else if (rawMode.includes('flight') || rawMode.includes('plane') || rawMode.includes('air')) {
             travelMode = 'fly';
-          } else if (destination.toLowerCase().includes('trail') || destination.toLowerCase().includes('hike')) {
+          } else if (rawMode.includes('walk') || rawMode.includes('trail')) {
             travelMode = 'hike';
+          } else if (rawMode.includes('cycle')) {
+            travelMode = 'bike';
+          } else {
+            const combined = `${destination} ${getField(['notes', 'description'])}`.toLowerCase();
+            if (combined.includes('flight') || combined.includes('airport') || combined.includes('gate')) {
+              travelMode = 'fly';
+            } else if (combined.includes('trail') || combined.includes('hike')) {
+              travelMode = 'hike';
+            }
           }
 
           // Activity detection
-          const rawType = (getField(['activitytype', 'type']) || '').toLowerCase();
+          const rawType = (getField(['activitytype', 'type', 'activity']) || '').toLowerCase();
           let activityType: ActivityType = 'sightseeing';
-          const combined = `${destination} ${getField(['notes', 'destinationnotes'])}`.toLowerCase();
           if (['lodging', 'sightseeing', 'hiking', 'food', 'driving'].includes(rawType)) {
             activityType = rawType as ActivityType;
-          } else if (combined.includes('hotel') || combined.includes('hostel') || combined.includes('lodging') || combined.includes('bivvi')) {
-            activityType = 'lodging';
-          } else if (combined.includes('flight') || combined.includes('gate') || combined.includes('shuttle') || combined.includes('drive')) {
-            activityType = 'driving';
-          } else if (combined.includes('coffee') || combined.includes('bakery') || combined.includes('cafe')) {
-            activityType = 'food';
+          } else {
+            const combined = `${destination} ${getField(['notes', 'description'])}`.toLowerCase();
+            if (combined.includes('hotel') || combined.includes('hostel') || combined.includes('lodging') || combined.includes('bivvi') || combined.includes('inn')) {
+              activityType = 'lodging';
+            } else if (combined.includes('flight') || combined.includes('gate') || combined.includes('shuttle') || combined.includes('drive')) {
+              activityType = 'driving';
+            } else if (combined.includes('coffee') || combined.includes('bakery') || combined.includes('cafe') || combined.includes('restaurant')) {
+              activityType = 'food';
+            } else if (combined.includes('hike') || combined.includes('trail') || combined.includes('falls')) {
+              activityType = 'hiking';
+            }
           }
 
-          const notes = (getField(['notes', 'destinationnotes', 'description']) || '').trim();
-          const rawInsights = getField(['insights']);
-          const insights = rawInsights ? rawInsights.split(/[|;]/).map((s) => s.trim()) : [];
+          const notes = (getField(['notes', 'destinationnotes', 'description', 'details']) || '').trim();
+          const rawInsights = getField(['insights', 'insight']);
+          const insights = rawInsights ? rawInsights.split(/[|;]/).map((s) => s.trim()).filter(Boolean) : [];
 
-          const rawTags = getField(['tags']);
-          const tags = rawTags ? rawTags.split(/[,|;]/).map((t) => t.trim()) : [activityType.toUpperCase()];
+          const rawTags = getField(['tags', 'tag']);
+          const tags = rawTags ? rawTags.split(/[,|;]/).map((t) => t.trim()).filter(Boolean) : [activityType.toUpperCase()];
 
-          const rawHardTime = (getField(['hardtime', 'hardtimes']) || 'none').toLowerCase();
+          const rawHardTime = (getField(['hardtime', 'hardtimes', 'lock']) || 'none').toLowerCase();
           const hardTime: HardTimeOption = ['none', 'arrival', 'departure'].includes(rawHardTime)
             ? (rawHardTime as HardTimeOption)
             : 'none';
 
-          const image = getField(['image', 'img']) || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80';
+          const image = getField(['image', 'img', 'photo']) || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80';
+
+          const rawLat = parseFloat(getField(['lat', 'latitude']));
+          const rawLng = parseFloat(getField(['lng', 'lon', 'longitude']));
+          const lat = !isNaN(rawLat) ? rawLat : undefined;
+          const lng = !isNaN(rawLng) ? rawLng : undefined;
 
           return {
             id: `stop-${date}-${i}`,
@@ -994,6 +1106,9 @@ export default function App() {
             tags,
             image,
             hardTime,
+            timeSpentMinutes: timeSpentMinutes > 0 ? timeSpentMinutes : Math.max(1, toMinutes(depart) - toMinutes(arrive)),
+            lat,
+            lng,
           };
         });
 
@@ -1032,7 +1147,7 @@ export default function App() {
 
   const handleRestoreDefaults = () => {
     setItinerary(INITIAL_DATA);
-    setSelectedDate('2026-09-23');
+    setSelectedDate('2026-09-18');
     try {
       localStorage.setItem(ITINERARY_STORAGE_KEY, JSON.stringify(INITIAL_DATA));
     } catch (e) {
@@ -1243,18 +1358,26 @@ export default function App() {
                 const IconComponent = meta.icon;
                 const isConflict = conflictingItemIds.has(item.id);
                 const durationMin = Math.max(1, toMinutes(item.departTime) - toMinutes(item.arrivalTime));
-                const travelMin = item.travelMinutes || 0;
+                
+                // Parse travelMinutes cleanly; fall back to scheduled gap between stops if unspecified
+                let travelMin = parseMinutesFlexible(item.travelMinutes);
+                if (travelMin <= 0 && index > 0) {
+                  const prev = currentDayItems[index - 1];
+                  const gap = toMinutes(item.arrivalTime) - toMinutes(prev.departTime);
+                  if (gap > 0) travelMin = gap;
+                }
+
                 const transitMeta = getTransitMeta(item.travelMode);
                 const TransitIcon = transitMeta.icon;
 
-                // Proportional duration bar
+                // Proportional bar calculation
                 const maxScale = 90;
                 const travelPct = Math.min(50, (travelMin / maxScale) * 100);
                 const stayPct = Math.min(100 - travelPct, (durationMin / maxScale) * 100);
 
                 return (
                   <React.Fragment key={item.id}>
-                    {/* Inter-card travel indicator */}
+                    {/* Inter-card travel connector */}
                     {index > 0 && travelMin > 0 && (
                       <div className="flex items-center space-x-2 py-1 pl-7 text-slate-600 text-xs font-medium">
                         <div className="w-0.5 h-6 bg-slate-300 ml-1.5 rounded-full"></div>
@@ -1267,7 +1390,7 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* Main Card */}
+                    {/* Main Waypoint Card */}
                     <div
                       onClick={() => setSelectedItem(item)}
                       className={`p-3.5 rounded-2xl bg-white border transition-all cursor-pointer shadow-xs hover:shadow-md group ${
@@ -1418,8 +1541,13 @@ export default function App() {
                   const transitMeta = getTransitMeta(item.travelMode);
                   const TransitIcon = transitMeta.icon;
 
-                  // Travel connector
+                  let travelM = parseMinutesFlexible(item.travelMinutes);
                   const prevStop = index > 0 ? currentDayItems[index - 1] : null;
+                  if (travelM <= 0 && prevStop) {
+                    const gap = itemArrival - toMinutes(prevStop.departTime);
+                    if (gap > 0) travelM = gap;
+                  }
+
                   let travelConn = null;
                   if (prevStop) {
                     const prevDepart = toMinutes(prevStop.departTime);
@@ -1432,10 +1560,10 @@ export default function App() {
                         style={{ top: `${connTop}px`, height: `${connHeight}px` }}
                       >
                         <div className="w-0.5 h-full bg-[#234E42]/40 border-l border-dashed border-[#234E42]/60 ml-2"></div>
-                        {item.travelMinutes > 0 && connHeight > 18 && (
+                        {travelM > 0 && connHeight > 18 && (
                           <div className="ml-2 bg-white text-slate-800 text-[9px] font-bold px-1.5 py-0.5 rounded border border-slate-300 shadow-2xs flex items-center space-x-1">
                             <TransitIcon className={`w-2.5 h-2.5 ${transitMeta.color}`} />
-                            <span>{item.travelMinutes}m {transitMeta.label}</span>
+                            <span>{travelM}m {transitMeta.label}</span>
                           </div>
                         )}
                       </div>
@@ -1950,6 +2078,7 @@ export default function App() {
                     const finalItem: ItineraryItem = {
                       ...editingItem,
                       destination: editingItem.destination || 'Untitled Waypoint',
+                      travelMinutes: parseMinutesFlexible(editingItem.travelMinutes),
                     };
 
                     if (isAddMode) {
@@ -2006,10 +2135,10 @@ export default function App() {
                     <span className="text-slate-400 block text-[10px] uppercase font-semibold">Duration & Transit</span>
                     <span className="font-bold text-[#234E42] text-sm flex items-center justify-end space-x-1">
                       <span>{formatDurationWords(toMinutes(selectedItem.departTime) - toMinutes(selectedItem.arrivalTime))}</span>
-                      {selectedItem.travelMinutes > 0 && (
+                      {parseMinutesFlexible(selectedItem.travelMinutes) > 0 && (
                         <span className="text-slate-500 font-medium text-xs flex items-center space-x-1 ml-1">
                           <span>•</span>
-                          <span>{selectedItem.travelMinutes}m {getTransitMeta(selectedItem.travelMode).label}</span>
+                          <span>{parseMinutesFlexible(selectedItem.travelMinutes)}m {getTransitMeta(selectedItem.travelMode).label}</span>
                         </span>
                       )}
                     </span>
@@ -2058,6 +2187,7 @@ export default function App() {
                     setEditingItem({
                       ...selectedItem,
                       timeSpentMinutes: Math.max(1, depM - arrM),
+                      travelMinutes: parseMinutesFlexible(selectedItem.travelMinutes),
                       travelMode: selectedItem.travelMode || 'drive',
                       timeError: null,
                     });
@@ -2206,7 +2336,7 @@ export default function App() {
                     className="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234E42] text-xs font-medium text-slate-900 bg-white"
                   />
                   <span className="text-[10px] text-slate-400 mt-1 block">
-                    Ensure your spreadsheet is shared via File &gt; Share &gt; Publish to web &gt; Comma-separated values (.csv)
+                    Columns supported: date, arrivalTime, departTime, destination, address, travelMinutes, timeSpent, notes, travelMode, activityType, lat, lng, insights, tags, image, hardTime.
                   </span>
                 </div>
 
