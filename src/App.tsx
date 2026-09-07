@@ -1208,7 +1208,8 @@ export default function App() {
               <div className="h-full w-3.5 bg-slate-900 rounded-2xs"></div>
             </div>
           </div>
-        </div> */}
+        </div>
+        */}
 
         {/* Top Header */}
         <div className="px-5 pt-2 pb-3 shrink-0">
