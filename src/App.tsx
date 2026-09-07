@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Calendar,
   Clock,
@@ -27,12 +27,86 @@ import {
   Check,
   RefreshCw,
   Trash2,
-  ExternalLink,
-  FileSpreadsheet
+  FileSpreadsheet,
+  LucideIcon
 } from 'lucide-react';
 
+// Types & Interfaces
+export type TransitMode = 'drive' | 'hike' | 'bike' | 'fly';
+export type ActivityType = 'lodging' | 'sightseeing' | 'hiking' | 'food' | 'driving';
+export type HardTimeOption = 'none' | 'arrival' | 'departure';
+
+export interface ItineraryItem {
+  id: string;
+  date: string;
+  destination: string;
+  address: string;
+  arrivalTime: string;
+  departTime: string;
+  travelMinutes: number;
+  travelMode: TransitMode;
+  activityType: ActivityType;
+  notes: string;
+  insights: string[];
+  tags: string[];
+  image: string;
+  hardTime: HardTimeOption;
+  timeSpentMinutes?: number;
+  timeError?: string | null;
+}
+
+export interface TransitMeta {
+  id: TransitMode;
+  label: string;
+  title: string;
+  icon: LucideIcon;
+  color: string;
+  bg: string;
+  badgeBg: string;
+}
+
+export interface ActivityMeta {
+  label: string;
+  icon: LucideIcon | React.FC<React.SVGProps<SVGSVGElement>>;
+  bgSoft: string;
+  iconColor: string;
+  stayBarColor: string;
+  travelBarColor: string;
+}
+
+export interface SunData {
+  label: string;
+  sunrise: string;
+  sunset: string;
+  sunriseMin: number;
+  sunsetMin: number;
+}
+
+export interface ScheduleConflict {
+  itemA: ItineraryItem;
+  itemB: ItineraryItem;
+  overlapMinutes: number;
+}
+
+export interface AppSettings {
+  preferImagesInCards: boolean;
+  cascadeDownstream: boolean;
+  showSunriseSunset: boolean;
+  showLiveTimeline: boolean;
+}
+
+export interface SyncFeedback {
+  type: 'success' | 'error' | 'info';
+  message: string;
+}
+
+// Storage Keys
+const ITINERARY_STORAGE_KEY = 'trailsync_itinerary_data';
+const SETTINGS_STORAGE_KEY = 'trailsync_settings_data';
+const SHEET_URL_STORAGE_KEY = 'trailsync_sheet_url';
+
 // Bed SVG Icon for lodging
-const BedIcon = (props) => (
+const BedIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg
     {...props}
     viewBox="0 0 24 24"
@@ -50,7 +124,7 @@ const BedIcon = (props) => (
 );
 
 // Transit Mode Helper
-const getTransitMeta = (mode = 'drive') => {
+const getTransitMeta = (mode: TransitMode = 'drive'): TransitMeta => {
   switch (mode) {
     case 'hike':
       return {
@@ -96,7 +170,7 @@ const getTransitMeta = (mode = 'drive') => {
   }
 };
 
-const INITIAL_DATA = [
+const INITIAL_DATA: ItineraryItem[] = [
   // Day 1: Wed Sep 23
   {
     id: 'stop-1',
@@ -269,26 +343,26 @@ const INITIAL_DATA = [
 const DEFAULT_SHEET_CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnbvJS7yfpExgR8hWefk4FJWaeRyh52q03uZs7hopOvFnsJoveg8O_FUYPABojI9Fn0bjRSySwdoyY/pub?gid=1559519314&single=true&output=csv';
 
-const KNOWN_SUN_DATA = {
+const KNOWN_SUN_DATA: Record<string, SunData> = {
   '2025-09-23': { label: 'Wed, Sep 23', sunrise: '6:23 AM', sunset: '7:08 PM', sunriseMin: 383, sunsetMin: 1148 },
   '2025-09-24': { label: 'Thu, Sep 24', sunrise: '6:24 AM', sunset: '7:06 PM', sunriseMin: 384, sunsetMin: 1146 },
   '2025-09-25': { label: 'Fri, Sep 25', sunrise: '6:25 AM', sunset: '7:05 PM', sunriseMin: 385, sunsetMin: 1145 },
 };
 
-const toMinutes = (timeStr) => {
+const toMinutes = (timeStr: string): number => {
   if (!timeStr) return 0;
   const [h, m] = timeStr.split(':').map(Number);
   return (h || 0) * 60 + (m || 0);
 };
 
-const toTimeString = (min) => {
+const toTimeString = (min: number): string => {
   const norm = ((min % 1440) + 1440) % 1440;
   const h = Math.floor(norm / 60);
   const m = norm % 60;
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 };
 
-const formatTime12h = (min) => {
+const formatTime12h = (min: number): string => {
   const norm = ((min % 1440) + 1440) % 1440;
   const h = Math.floor(norm / 60);
   const m = norm % 60;
@@ -297,14 +371,14 @@ const formatTime12h = (min) => {
   return `${displayH}:${m.toString().padStart(2, '0')} ${period}`;
 };
 
-const formatDurationColon = (min) => {
+const formatDurationColon = (min: number): string => {
   if (min <= 0) return '0:00';
   const h = Math.floor(min / 60);
   const m = min % 60;
   return `${h}:${m.toString().padStart(2, '0')}`;
 };
 
-const formatDurationWords = (min) => {
+const formatDurationWords = (min: number): string => {
   if (min <= 0) return '0 min';
   const h = Math.floor(min / 60);
   const m = min % 60;
@@ -312,7 +386,7 @@ const formatDurationWords = (min) => {
   return `${h}h ${m > 0 ? `${m}m` : ''}`.trim();
 };
 
-const formatDateLabel = (dateStr) => {
+const formatDateLabel = (dateStr: string): string => {
   try {
     const [y, m, d] = dateStr.split('-').map(Number);
     const date = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
@@ -322,7 +396,7 @@ const formatDateLabel = (dateStr) => {
   }
 };
 
-const getSunDataForDate = (dateStr) => {
+const getSunDataForDate = (dateStr: string): SunData => {
   if (KNOWN_SUN_DATA[dateStr]) return KNOWN_SUN_DATA[dateStr];
   try {
     const [year, month, day] = dateStr.split('-').map(Number);
@@ -368,7 +442,7 @@ const getSunDataForDate = (dateStr) => {
   }
 };
 
-const normalizeTimeTo24h = (raw, fallback = '08:00') => {
+const normalizeTimeTo24h = (raw: string | undefined, fallback = '08:00'): string => {
   if (!raw || typeof raw !== 'string') return fallback;
   const str = raw.trim().toUpperCase();
   const ampmMatch = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
@@ -389,7 +463,7 @@ const normalizeTimeTo24h = (raw, fallback = '08:00') => {
   return fallback;
 };
 
-const parseMinutesFlexible = (raw) => {
+const parseMinutesFlexible = (raw: string | number | undefined): number => {
   if (!raw) return 0;
   const str = raw.toString().trim();
   if (str.includes(':')) {
@@ -400,7 +474,7 @@ const parseMinutesFlexible = (raw) => {
   return isNaN(num) ? 0 : num;
 };
 
-const normalizeDateToISO = (raw, fallbackYear = 2025) => {
+const normalizeDateToISO = (raw: string, fallbackYear = 2025): string => {
   if (!raw) return `${fallbackYear}-09-23`;
   const str = raw.trim();
   const isoMatch = str.match(/(\d{4})-(\d{2})-(\d{2})/);
@@ -416,15 +490,15 @@ const normalizeDateToISO = (raw, fallbackYear = 2025) => {
   return `${fallbackYear}-09-23`;
 };
 
-function parseCSV(text) {
+function parseCSV(text: string): Record<string, string>[] {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
   const headers = lines[0].split(',').map((h) => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
-  const results = [];
+  const results: Record<string, string>[] = [];
   for (let i = 1; i < lines.length; i++) {
     const rawLine = lines[i];
     if (!rawLine.trim()) continue;
-    const row = [];
+    const row: string[] = [];
     let insideQuote = false;
     let entry = '';
     for (let charIdx = 0; charIdx < rawLine.length; charIdx++) {
@@ -439,7 +513,7 @@ function parseCSV(text) {
       }
     }
     row.push(entry.trim().replace(/^["']|["']$/g, ''));
-    const obj = {};
+    const obj: Record<string, string> = {};
     headers.forEach((hdr, idx) => {
       obj[hdr] = row[idx] || '';
     });
@@ -449,29 +523,84 @@ function parseCSV(text) {
 }
 
 export default function App() {
-  const [itinerary, setItinerary] = useState(INITIAL_DATA);
-  const [selectedDate, setSelectedDate] = useState('2025-09-23');
-  const [activeTab, setActiveTab] = useState('itinerary');
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [editingItem, setEditingItem] = useState(null);
-  const [isAddMode, setIsAddMode] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showSyncModal, setShowSyncModal] = useState(false);
-  const [showCalendarPicker, setShowCalendarPicker] = useState(false);
-  const [showClearConfirmModal, setShowClearConfirmModal] = useState(false);
-
-  // Sync state
-  const [sheetUrl, setSheetUrl] = useState(DEFAULT_SHEET_CSV_URL);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncFeedback, setSyncFeedback] = useState(null);
-
-  // Settings
-  const [settings, setSettings] = useState({
-    preferImagesInCards: true,
-    cascadeDownstream: true,
-    showSunriseSunset: true,
-    showLiveTimeline: true,
+  // 1. Persisted Itinerary state (Loads INITIAL_DATA only on the first cold start)
+  const [itinerary, setItinerary] = useState<ItineraryItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(ITINERARY_STORAGE_KEY);
+      return saved !== null ? JSON.parse(saved) : INITIAL_DATA;
+    } catch {
+      return INITIAL_DATA;
+    }
   });
+
+  // Keep localStorage updated with any changes (synced, edited, or cleared)
+  useEffect(() => {
+    try {
+      localStorage.setItem(ITINERARY_STORAGE_KEY, JSON.stringify(itinerary));
+    } catch (err) {
+      console.error('Failed to save itinerary to localStorage', err);
+    }
+  }, [itinerary]);
+
+  const [selectedDate, setSelectedDate] = useState<string>('2025-09-23');
+  const [activeTab, setActiveTab] = useState<'itinerary' | 'gantt' | 'summary'>('itinerary');
+  const [selectedItem, setSelectedItem] = useState<ItineraryItem | null>(null);
+  const [editingItem, setEditingItem] = useState<ItineraryItem | null>(null);
+  const [isAddMode, setIsAddMode] = useState<boolean>(false);
+  const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
+  const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
+  const [showCalendarPicker, setShowCalendarPicker] = useState<boolean>(false);
+  const [showClearConfirmModal, setShowClearConfirmModal] = useState<boolean>(false);
+
+  // 2. Persisted Sheet URL state
+  const [sheetUrl, setSheetUrl] = useState<string>(() => {
+    try {
+      return localStorage.getItem(SHEET_URL_STORAGE_KEY) || DEFAULT_SHEET_CSV_URL;
+    } catch {
+      return DEFAULT_SHEET_CSV_URL;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SHEET_URL_STORAGE_KEY, sheetUrl);
+    } catch (err) {
+      console.error('Failed to save sheet URL to localStorage', err);
+    }
+  }, [sheetUrl]);
+
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [syncFeedback, setSyncFeedback] = useState<SyncFeedback | null>(null);
+
+  // 3. Persisted Settings state
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    try {
+      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      return saved !== null
+        ? JSON.parse(saved)
+        : {
+            preferImagesInCards: true,
+            cascadeDownstream: true,
+            showSunriseSunset: true,
+            showLiveTimeline: true,
+          };
+    } catch {
+      return {
+        preferImagesInCards: true,
+        cascadeDownstream: true,
+        showSunriseSunset: true,
+        showLiveTimeline: true,
+      };
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    } catch (err) {
+      console.error('Failed to save settings to localStorage', err);
+    }
+  }, [settings]);
 
   const tripDates = useMemo(() => {
     const unique = Array.from(new Set(itinerary.map((it) => it.date))).sort();
@@ -491,7 +620,7 @@ export default function App() {
   const timelineEndMin = 15 * 60;
   const totalTimelineMinutes = timelineEndMin - timelineStartMin;
   const timelinePixelHeight = 720;
-  const minToPx = (m) => ((m - timelineStartMin) / totalTimelineMinutes) * timelinePixelHeight;
+  const minToPx = (m: number) => ((m - timelineStartMin) / totalTimelineMinutes) * timelinePixelHeight;
 
   // Filter items for selected day
   const currentDayItems = useMemo(() => {
@@ -500,8 +629,8 @@ export default function App() {
       .sort((a, b) => toMinutes(a.arrivalTime) - toMinutes(b.arrivalTime));
   }, [itinerary, activeDate]);
 
-  const overlaps = useMemo(() => {
-    const conflicts = [];
+  const overlaps = useMemo<ScheduleConflict[]>(() => {
+    const conflicts: ScheduleConflict[] = [];
     for (let i = 0; i < currentDayItems.length; i++) {
       for (let j = i + 1; j < currentDayItems.length; j++) {
         const a = currentDayItems[i];
@@ -524,7 +653,7 @@ export default function App() {
   }, [currentDayItems]);
 
   const conflictingItemIds = useMemo(() => {
-    const set = new Set();
+    const set = new Set<string>();
     overlaps.forEach((c) => {
       set.add(c.itemA.id);
       set.add(c.itemB.id);
@@ -540,7 +669,7 @@ export default function App() {
     let totalWalkHikingActivityMin = 0;
     let totalTimeSpentMin = 0;
 
-    const activityMinutes = {
+    const activityMinutes: Record<string, number> = {
       driving: 0,
       hiking: 0,
       sightseeing: 0,
@@ -587,7 +716,7 @@ export default function App() {
     };
   }, [currentDayItems]);
 
-  const getActivityMeta = (type) => {
+  const getActivityMeta = (type: ActivityType): ActivityMeta => {
     switch (type) {
       case 'lodging':
         return {
@@ -646,7 +775,7 @@ export default function App() {
     if (idx < tripDates.length - 1) setSelectedDate(tripDates[idx + 1]);
   };
 
-  const cascadeSchedule = (updatedItem, fullList) => {
+  const cascadeSchedule = (updatedItem: ItineraryItem, fullList: ItineraryItem[]): ItineraryItem[] => {
     if (!settings.cascadeDownstream) {
       return fullList.map((it) => (it.id === updatedItem.id ? updatedItem : it));
     }
@@ -742,7 +871,7 @@ export default function App() {
     const newArrival = prevDepart + (conflict.itemB.travelMinutes || 5);
     const newDepart = newArrival + itemBDuration;
 
-    const resolvedItem = {
+    const resolvedItem: ItineraryItem = {
       ...conflict.itemB,
       arrivalTime: toTimeString(newArrival),
       departTime: toTimeString(newDepart),
@@ -767,7 +896,7 @@ export default function App() {
       }
 
       let lastDate = '2025-09-23';
-      const parsedStops = rows
+      const parsedStops: ItineraryItem[] = rows
         .filter((r) => r.destination || r.stop || r.location || r['destination notes'])
         .map((r, i) => {
           const rawDate = r.date || r.day || '';
@@ -795,9 +924,9 @@ export default function App() {
 
           // Mode detection
           const rawMode = (r['travel mode'] || r.travelmode || r.mode || '').toLowerCase();
-          let travelMode = 'drive';
+          let travelMode: TransitMode = 'drive';
           if (['drive', 'hike', 'bike', 'fly'].includes(rawMode)) {
-            travelMode = rawMode;
+            travelMode = rawMode as TransitMode;
           } else if (destination.toLowerCase().includes('flight') || destination.toLowerCase().includes('airport')) {
             travelMode = 'fly';
           } else if (destination.toLowerCase().includes('trail') || destination.toLowerCase().includes('hike')) {
@@ -806,10 +935,10 @@ export default function App() {
 
           // Activity detection
           const rawType = (r['activity type'] || r.activitytype || r.type || '').toLowerCase();
-          let activityType = 'sightseeing';
+          let activityType: ActivityType = 'sightseeing';
           const combined = `${destination} ${r['destination notes'] || r.notes || ''}`.toLowerCase();
           if (['lodging', 'sightseeing', 'hiking', 'food', 'driving'].includes(rawType)) {
-            activityType = rawType;
+            activityType = rawType as ActivityType;
           } else if (combined.includes('hostel') || combined.includes('hotel') || combined.includes('resort') || combined.includes('pool')) {
             activityType = 'lodging';
           } else if (combined.includes('waterfall') || combined.includes('trail') || combined.includes('falls') || combined.includes('cañon')) {
@@ -820,6 +949,10 @@ export default function App() {
 
           const notes = (r['destination notes'] || r.notes || r.description || '').trim();
           const insights = r.insights ? r.insights.split(/[|;]/).map((s) => s.trim()) : [];
+          const rawHardTime = (r['hard time'] || r.hardtime || 'none').toLowerCase();
+          const hardTime: HardTimeOption = ['none', 'arrival', 'departure'].includes(rawHardTime)
+            ? (rawHardTime as HardTimeOption)
+            : 'none';
 
           return {
             id: `stop-${date}-${i}`,
@@ -835,7 +968,7 @@ export default function App() {
             insights,
             tags: [activityType.toUpperCase()],
             image: r.image || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80',
-            hardTime: (r['hard time'] || r.hardtime || 'none').toLowerCase(),
+            hardTime,
           };
         });
 
@@ -847,16 +980,25 @@ export default function App() {
         setSyncFeedback({ type: 'error', message: 'No valid itinerary rows identified in sheet.' });
       }
     } catch (err) {
-      setSyncFeedback({ type: 'error', message: `Sync failed: ${err.message}` });
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setSyncFeedback({ type: 'error', message: `Sync failed: ${msg}` });
     } finally {
       setIsSyncing(false);
     }
   };
 
+  // Clears state and stores empty array in localStorage to prevent restoring INITIAL_DATA on reload
   const handleConfirmClearItinerary = () => {
     setItinerary([]);
     setSelectedItem(null);
     setShowClearConfirmModal(false);
+    setShowSettingsModal(false);
+  };
+
+  // Resets to built-in Colorado defaults
+  const handleRestoreDefaults = () => {
+    setItinerary(INITIAL_DATA);
+    setSelectedDate('2025-09-23');
     setShowSettingsModal(false);
   };
 
@@ -1040,10 +1182,7 @@ export default function App() {
                   <span>Sync from Google Sheets</span>
                 </button>
                 <button
-                  onClick={() => {
-                    setItinerary(INITIAL_DATA);
-                    setSelectedDate('2025-09-23');
-                  }}
+                  onClick={handleRestoreDefaults}
                   className="py-2.5 px-4 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold text-xs hover:bg-slate-50 cursor-pointer"
                 >
                   Restore Colorado Tour Defaults
@@ -1076,7 +1215,7 @@ export default function App() {
 
                 return (
                   <React.Fragment key={item.id}>
-                    {/* INTER-CARD TRAVEL CONNECTOR (Only display if > 0 minutes) */}
+                    {/* INTER-CARD TRAVEL CONNECTOR */}
                     {index > 0 && travelMin > 0 && (
                       <div className="flex items-center space-x-2 py-1 pl-7 text-slate-600 text-xs font-medium">
                         <div className="w-0.5 h-6 bg-slate-300 ml-1.5 rounded-full"></div>
@@ -1109,7 +1248,7 @@ export default function App() {
                               alt={item.destination}
                               className="w-full h-full object-cover rounded-2xl"
                               onError={(e) => {
-                                e.currentTarget.style.display = 'none';
+                                (e.currentTarget as HTMLElement).style.display = 'none';
                               }}
                             />
                           ) : (
@@ -1513,12 +1652,14 @@ export default function App() {
 
                   {/* 4 Transit Mode Buttons: Drive, Hike, Bike, Fly */}
                   <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { id: 'drive', label: 'Drive', icon: Car },
-                      { id: 'hike', label: 'Hike', icon: Footprints },
-                      { id: 'bike', label: 'Bike', icon: Bike },
-                      { id: 'fly', label: 'Fly', icon: Plane },
-                    ].map((mode) => {
+                    {(
+                      [
+                        { id: 'drive', label: 'Drive', icon: Car },
+                        { id: 'hike', label: 'Hike', icon: Footprints },
+                        { id: 'bike', label: 'Bike', icon: Bike },
+                        { id: 'fly', label: 'Fly', icon: Plane },
+                      ] as const
+                    ).map((mode) => {
                       const ModeIcon = mode.icon;
                       const isSelected = (editingItem.travelMode || 'drive') === mode.id;
                       return (
@@ -1551,10 +1692,10 @@ export default function App() {
                         type="number"
                         min="0"
                         max="360"
-                        value={editingItem.travelMinutes}
+                        value={editingItem.travelMinutes !== undefined ? editingItem.travelMinutes : ''}
                         onChange={(e) => {
-                          const val = parseInt(e.target.value, 10) || 0;
-                          setEditingItem({ ...editingItem, travelMinutes: Math.max(0, val) });
+                          const val = parseInt(e.target.value, 10);
+                          setEditingItem({ ...editingItem, travelMinutes: isNaN(val) ? 0 : Math.max(0, val) });
                         }}
                         className="w-20 px-2.5 py-1.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234E42] text-xs font-bold text-slate-900 bg-white text-center"
                       />
@@ -1612,9 +1753,19 @@ export default function App() {
                         type="number"
                         min="1"
                         max="720"
-                        value={editingItem.timeSpentMinutes ?? ''}
+                        value={editingItem.timeSpentMinutes !== undefined ? editingItem.timeSpentMinutes : ''}
                         onChange={(e) => {
-                          const newSpent = parseInt(e.target.value, 10);
+                          const val = e.target.value;
+                          if (val === '') {
+                            setEditingItem({
+                              ...editingItem,
+                              timeSpentMinutes: 0,
+                              timeError: 'Time spent must be at least 1 minute.',
+                            });
+                            return;
+                          }
+
+                          const newSpent = parseInt(val, 10);
                           if (isNaN(newSpent) || newSpent < 1) {
                             setEditingItem({
                               ...editingItem,
@@ -1721,7 +1872,7 @@ export default function App() {
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
-                    {['none', 'arrival', 'departure'].map((opt) => (
+                    {(['none', 'arrival', 'departure'] as const).map((opt) => (
                       <button
                         type="button"
                         key={opt}
@@ -1745,7 +1896,7 @@ export default function App() {
                   <select
                     value={editingItem.activityType}
                     onChange={(e) =>
-                      setEditingItem({ ...editingItem, activityType: e.target.value })
+                      setEditingItem({ ...editingItem, activityType: e.target.value as ActivityType })
                     }
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234E42] text-xs font-medium bg-white"
                   >
@@ -1762,7 +1913,7 @@ export default function App() {
                     Notes
                   </label>
                   <textarea
-                    rows="2"
+                    rows={2}
                     value={editingItem.notes}
                     onChange={(e) =>
                       setEditingItem({ ...editingItem, notes: e.target.value })
@@ -1783,7 +1934,7 @@ export default function App() {
                 <button
                   disabled={Boolean(editingItem.timeError)}
                   onClick={() => {
-                    const finalItem = {
+                    const finalItem: ItineraryItem = {
                       ...editingItem,
                       destination: editingItem.destination || 'Untitled Waypoint',
                     };
@@ -1988,11 +2139,7 @@ export default function App() {
 
                 <div className="pt-2 space-y-2">
                   <button
-                    onClick={() => {
-                      setItinerary(INITIAL_DATA);
-                      setSelectedDate('2025-09-23');
-                      setShowSettingsModal(false);
-                    }}
+                    onClick={handleRestoreDefaults}
                     className="w-full py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer"
                   >
                     <RotateCcw className="w-4 h-4" />
