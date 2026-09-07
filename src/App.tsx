@@ -1198,7 +1198,7 @@ export default function App() {
       {/* Mobile Shell Frame */}
       <div className="w-full max-w-md bg-[#F4F6F0] text-slate-900 shadow-2xl flex flex-col relative overflow-hidden sm:rounded-[42px] border-0 sm:border-8 sm:border-slate-800 h-[100dvh] sm:h-[870px]">
         
-        {/* Status Bar */}
+        {/* Status Bar
         <div className="bg-[#F4F6F0] px-6 pt-3 pb-1 flex items-center justify-between text-xs tracking-tight shrink-0 select-none">
           <span className="font-semibold text-sm text-slate-800">12:14</span>
           <div className="w-24 h-4 bg-slate-900 rounded-full mx-auto hidden sm:block"></div>
@@ -1208,7 +1208,7 @@ export default function App() {
               <div className="h-full w-3.5 bg-slate-900 rounded-2xs"></div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Top Header */}
         <div className="px-5 pt-2 pb-3 shrink-0">
@@ -1220,7 +1220,7 @@ export default function App() {
                 </svg>
               </div>
               <span className="font-serif font-bold text-lg text-[#1E4238] tracking-tight">
-                TrailSync
+                MidPoint Journey
               </span>
             </div>
 
