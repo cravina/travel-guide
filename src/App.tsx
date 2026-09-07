@@ -2186,9 +2186,9 @@ export default function App() {
                 {selectedItem.address && (
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      selectedItem.lat && selectedItem.lng
-                      ? `${selectedItem.lat},${selectedItem.lng}`
-                      : `${selectedItem.address}`
+                      selectedItem.lat != null && selectedItem.lng != null
+                        ? `${selectedItem.lat},${selectedItem.lng}`
+                        : selectedItem.address
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
