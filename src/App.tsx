@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Calendar,
   Clock,
@@ -101,9 +101,9 @@ export interface SyncFeedback {
 }
 
 // Storage Keys
-const ITINERARY_STORAGE_KEY = 'trailsync_itinerary_data';
-const SETTINGS_STORAGE_KEY = 'trailsync_settings_data';
-const SHEET_URL_STORAGE_KEY = 'trailsync_sheet_url';
+const ITINERARY_STORAGE_KEY = 'trailsync_itinerary_data_v2';
+const SETTINGS_STORAGE_KEY = 'trailsync_settings_data_v2';
+const SHEET_URL_STORAGE_KEY = 'trailsync_sheet_url_v2';
 
 // Bed SVG Icon for lodging
 const BedIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -174,7 +174,7 @@ const INITIAL_DATA: ItineraryItem[] = [
   // Day 1: Wed Sep 23
   {
     id: 'stop-1',
-    date: '2025-09-23',
+    date: '2026-09-23',
     destination: 'The Bivvi Hostel Telluride',
     address: 'Telluride, CO',
     arrivalTime: '07:00',
@@ -194,7 +194,7 @@ const INITIAL_DATA: ItineraryItem[] = [
   },
   {
     id: 'stop-2',
-    date: '2025-09-23',
+    date: '2026-09-23',
     destination: 'Dallas Divide Summit Overlook',
     address: 'CO-62, Telluride, CO',
     arrivalTime: '07:23',
@@ -214,7 +214,7 @@ const INITIAL_DATA: ItineraryItem[] = [
   },
   {
     id: 'stop-3',
-    date: '2025-09-23',
+    date: '2026-09-23',
     destination: 'Historic Main Street (Ouray)',
     address: 'Main St, Ouray, CO',
     arrivalTime: '08:01',
@@ -234,7 +234,7 @@ const INITIAL_DATA: ItineraryItem[] = [
   },
   {
     id: 'stop-4',
-    date: '2025-09-23',
+    date: '2026-09-23',
     destination: 'Box Cañon Falls Park',
     address: 'Box Canyon Rd, Ouray, CO',
     arrivalTime: '08:45',
@@ -254,7 +254,7 @@ const INITIAL_DATA: ItineraryItem[] = [
   },
   {
     id: 'stop-5',
-    date: '2025-09-23',
+    date: '2026-09-23',
     destination: 'Cascade Falls Park',
     address: '8th Ave & 5th St, Ouray, CO',
     arrivalTime: '09:50',
@@ -275,7 +275,7 @@ const INITIAL_DATA: ItineraryItem[] = [
   // Day 2: Thu Sep 24
   {
     id: 'stop-6',
-    date: '2025-09-24',
+    date: '2026-09-24',
     destination: 'Ouray Hot Springs Pool',
     address: 'Ouray, CO',
     arrivalTime: '07:30',
@@ -291,7 +291,7 @@ const INITIAL_DATA: ItineraryItem[] = [
   },
   {
     id: 'stop-7',
-    date: '2025-09-24',
+    date: '2026-09-24',
     destination: 'Million Dollar Highway Overlook',
     address: 'US-550, Red Mountain Pass, CO',
     arrivalTime: '08:45',
@@ -307,7 +307,7 @@ const INITIAL_DATA: ItineraryItem[] = [
   },
   {
     id: 'stop-8',
-    date: '2025-09-24',
+    date: '2026-09-24',
     destination: 'Silverton Historic Mining Town',
     address: 'Blair St, Silverton, CO',
     arrivalTime: '09:40',
@@ -324,7 +324,7 @@ const INITIAL_DATA: ItineraryItem[] = [
   // Day 3: Fri Sep 25
   {
     id: 'stop-9',
-    date: '2025-09-25',
+    date: '2026-09-25',
     destination: 'Telluride Free Gondola',
     address: 'San Juan Ave, Telluride, CO',
     arrivalTime: '09:00',
@@ -344,9 +344,10 @@ const DEFAULT_SHEET_CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnbvJS7yfpExgR8hWefk4FJWaeRyh52q03uZs7hopOvFnsJoveg8O_FUYPABojI9Fn0bjRSySwdoyY/pub?gid=1559519314&single=true&output=csv';
 
 const KNOWN_SUN_DATA: Record<string, SunData> = {
-  '2025-09-23': { label: 'Wed, Sep 23', sunrise: '6:23 AM', sunset: '7:08 PM', sunriseMin: 383, sunsetMin: 1148 },
-  '2025-09-24': { label: 'Thu, Sep 24', sunrise: '6:24 AM', sunset: '7:06 PM', sunriseMin: 384, sunsetMin: 1146 },
-  '2025-09-25': { label: 'Fri, Sep 25', sunrise: '6:25 AM', sunset: '7:05 PM', sunriseMin: 385, sunsetMin: 1145 },
+  '2026-09-18': { label: 'Fri, Sep 18', sunrise: '6:20 AM', sunset: '7:13 PM', sunriseMin: 380, sunsetMin: 1153 },
+  '2026-09-23': { label: 'Wed, Sep 23', sunrise: '6:23 AM', sunset: '7:08 PM', sunriseMin: 383, sunsetMin: 1148 },
+  '2026-09-24': { label: 'Thu, Sep 24', sunrise: '6:24 AM', sunset: '7:06 PM', sunriseMin: 384, sunsetMin: 1146 },
+  '2026-09-25': { label: 'Fri, Sep 25', sunrise: '6:25 AM', sunset: '7:05 PM', sunriseMin: 385, sunsetMin: 1145 },
 };
 
 const toMinutes = (timeStr: string): number => {
@@ -463,8 +464,9 @@ const normalizeTimeTo24h = (raw: string | undefined, fallback = '08:00'): string
   return fallback;
 };
 
+// Flexible duration & minute parsing (handles "1:10" -> 70, "45" -> 45, "0:20" -> 20)
 const parseMinutesFlexible = (raw: string | number | undefined): number => {
-  if (!raw) return 0;
+  if (raw === undefined || raw === null) return 0;
   const str = raw.toString().trim();
   if (str.includes(':')) {
     const parts = str.split(':').map(Number);
@@ -474,11 +476,13 @@ const parseMinutesFlexible = (raw: string | number | undefined): number => {
   return isNaN(num) ? 0 : num;
 };
 
-const normalizeDateToISO = (raw: string, fallbackYear = 2025): string => {
-  if (!raw) return `${fallbackYear}-09-23`;
+// Flexible date parsing supporting "Fri 9/18", "9/18", "9/18/2026", and "2026-09-18"
+const normalizeDateToISO = (raw: string, fallbackYear = 2026): string => {
+  if (!raw) return `${fallbackYear}-09-18`;
   const str = raw.trim();
   const isoMatch = str.match(/(\d{4})-(\d{2})-(\d{2})/);
   if (isoMatch) return isoMatch[0];
+
   const slashMatch = str.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
   if (slashMatch) {
     const month = parseInt(slashMatch[1], 10).toString().padStart(2, '0');
@@ -487,7 +491,7 @@ const normalizeDateToISO = (raw: string, fallbackYear = 2025): string => {
     if (year < 100) year += 2000;
     return `${year}-${month}-${day}`;
   }
-  return `${fallbackYear}-09-23`;
+  return `${fallbackYear}-09-18`;
 };
 
 function parseCSV(text: string): Record<string, string>[] {
@@ -523,18 +527,28 @@ function parseCSV(text: string): Record<string, string>[] {
 }
 
 export default function App() {
-  // 1. Persisted Itinerary state (Loads INITIAL_DATA only on the first cold start)
+  // 1. Persisted Itinerary State
   const [itinerary, setItinerary] = useState<ItineraryItem[]>(() => {
     try {
       const saved = localStorage.getItem(ITINERARY_STORAGE_KEY);
-      return saved !== null ? JSON.parse(saved) : INITIAL_DATA;
-    } catch {
-      return INITIAL_DATA;
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.error('Error reading localStorage for itinerary', e);
     }
+    return INITIAL_DATA;
   });
 
-  // Keep localStorage updated with any changes (synced, edited, or cleared)
+  // Guard flag to prevent React 18 StrictMode mount from overwriting saved localStorage
+  const isItineraryInitialized = useRef(false);
+
   useEffect(() => {
+    if (!isItineraryInitialized.current) {
+      isItineraryInitialized.current = true;
+      return;
+    }
     try {
       localStorage.setItem(ITINERARY_STORAGE_KEY, JSON.stringify(itinerary));
     } catch (err) {
@@ -542,7 +556,58 @@ export default function App() {
     }
   }, [itinerary]);
 
-  const [selectedDate, setSelectedDate] = useState<string>('2025-09-23');
+  // 2. Persisted Sheet URL State
+  const [sheetUrl, setSheetUrl] = useState<string>(() => {
+    try {
+      return localStorage.getItem(SHEET_URL_STORAGE_KEY) || DEFAULT_SHEET_CSV_URL;
+    } catch {
+      return DEFAULT_SHEET_CSV_URL;
+    }
+  });
+
+  const isSheetUrlInitialized = useRef(false);
+
+  useEffect(() => {
+    if (!isSheetUrlInitialized.current) {
+      isSheetUrlInitialized.current = true;
+      return;
+    }
+    try {
+      localStorage.setItem(SHEET_URL_STORAGE_KEY, sheetUrl);
+    } catch (err) {
+      console.error('Failed to save sheet URL to localStorage', err);
+    }
+  }, [sheetUrl]);
+
+  // 3. Persisted Settings State
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    try {
+      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (saved !== null) return JSON.parse(saved);
+    } catch {}
+    return {
+      preferImagesInCards: true,
+      cascadeDownstream: true,
+      showSunriseSunset: true,
+      showLiveTimeline: true,
+    };
+  });
+
+  const isSettingsInitialized = useRef(false);
+
+  useEffect(() => {
+    if (!isSettingsInitialized.current) {
+      isSettingsInitialized.current = true;
+      return;
+    }
+    try {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    } catch (err) {
+      console.error('Failed to save settings to localStorage', err);
+    }
+  }, [settings]);
+
+  const [selectedDate, setSelectedDate] = useState<string>('2026-09-18');
   const [activeTab, setActiveTab] = useState<'itinerary' | 'gantt' | 'summary'>('itinerary');
   const [selectedItem, setSelectedItem] = useState<ItineraryItem | null>(null);
   const [editingItem, setEditingItem] = useState<ItineraryItem | null>(null);
@@ -552,62 +617,15 @@ export default function App() {
   const [showCalendarPicker, setShowCalendarPicker] = useState<boolean>(false);
   const [showClearConfirmModal, setShowClearConfirmModal] = useState<boolean>(false);
 
-  // 2. Persisted Sheet URL state
-  const [sheetUrl, setSheetUrl] = useState<string>(() => {
-    try {
-      return localStorage.getItem(SHEET_URL_STORAGE_KEY) || DEFAULT_SHEET_CSV_URL;
-    } catch {
-      return DEFAULT_SHEET_CSV_URL;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(SHEET_URL_STORAGE_KEY, sheetUrl);
-    } catch (err) {
-      console.error('Failed to save sheet URL to localStorage', err);
-    }
-  }, [sheetUrl]);
-
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncFeedback, setSyncFeedback] = useState<SyncFeedback | null>(null);
 
-  // 3. Persisted Settings state
-  const [settings, setSettings] = useState<AppSettings>(() => {
-    try {
-      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      return saved !== null
-        ? JSON.parse(saved)
-        : {
-            preferImagesInCards: true,
-            cascadeDownstream: true,
-            showSunriseSunset: true,
-            showLiveTimeline: true,
-          };
-    } catch {
-      return {
-        preferImagesInCards: true,
-        cascadeDownstream: true,
-        showSunriseSunset: true,
-        showLiveTimeline: true,
-      };
-    }
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-    } catch (err) {
-      console.error('Failed to save settings to localStorage', err);
-    }
-  }, [settings]);
-
   const tripDates = useMemo(() => {
     const unique = Array.from(new Set(itinerary.map((it) => it.date))).sort();
-    return unique.length > 0 ? unique : ['2025-09-23'];
+    return unique.length > 0 ? unique : ['2026-09-18'];
   }, [itinerary]);
 
-  // Ensure valid date is selected
+  // Auto-sync selectedDate to available dates
   const activeDate = useMemo(() => {
     return tripDates.includes(selectedDate) ? selectedDate : tripDates[0];
   }, [tripDates, selectedDate]);
@@ -617,7 +635,7 @@ export default function App() {
   }, [activeDate]);
 
   const timelineStartMin = 6 * 60;
-  const timelineEndMin = 15 * 60;
+  const timelineEndMin = 18 * 60;
   const totalTimelineMinutes = timelineEndMin - timelineStartMin;
   const timelinePixelHeight = 720;
   const minToPx = (m: number) => ((m - timelineStartMin) / totalTimelineMinutes) * timelinePixelHeight;
@@ -880,6 +898,7 @@ export default function App() {
     setItinerary((prev) => cascadeSchedule(resolvedItem, prev));
   };
 
+  // Google Sheets CSV Importer
   const handleSyncFromSheet = async () => {
     if (!sheetUrl.trim()) return;
     setIsSyncing(true);
@@ -895,23 +914,32 @@ export default function App() {
         throw new Error('CSV is empty or could not be parsed.');
       }
 
-      let lastDate = '2025-09-23';
+      let lastDate = '2026-09-18';
       const parsedStops: ItineraryItem[] = rows
-        .filter((r) => r.destination || r.stop || r.location || r['destination notes'])
+        .filter((r) => r.destination || r.stop || r.location || r.notes || r['destination notes'])
         .map((r, i) => {
-          const rawDate = r.date || r.day || '';
-          if (rawDate) lastDate = normalizeDateToISO(rawDate);
+          // Normalize matching on headers regardless of casing, spaces, or hyphens
+          const getField = (names: string[]) => {
+            for (const key of Object.keys(r)) {
+              const cleanKey = key.toLowerCase().replace(/[\s_-]/g, '');
+              if (names.includes(cleanKey)) return r[key];
+            }
+            return '';
+          };
+
+          const rawDate = getField(['date', 'day']);
+          if (rawDate) lastDate = normalizeDateToISO(rawDate, 2026);
           const date = lastDate;
 
-          const destination = (r.destination || r.stop || r.location || `Stop ${i + 1}`).trim();
-          const address = (r.address || r.location || destination).trim();
+          const destination = (getField(['destination', 'stop', 'location']) || `Stop ${i + 1}`).trim();
+          const address = (getField(['address']) || destination).trim();
 
-          const rawArr = r['arrival time'] || r.arrivaltime || r.arrival || r.start || '08:00';
-          const rawDep = r['depart time'] || r.departtime || r.depart || r.end || '';
+          const rawArr = getField(['arrivaltime', 'arrival', 'start']) || '08:00';
+          const rawDep = getField(['departtime', 'depart', 'end']) || '';
           const arrive = normalizeTimeTo24h(rawArr, '08:00');
 
-          const travelMinutes = parseMinutesFlexible(r['travel time'] || r.traveltime || r.travelminutes || r.travel || r.drive);
-          const timeSpentMinutes = parseMinutesFlexible(r['time spent'] || r.timespent || r.duration);
+          const travelMinutes = parseMinutesFlexible(getField(['travelminutes', 'traveltime', 'travel', 'drive']));
+          const timeSpentMinutes = parseMinutesFlexible(getField(['timespent', 'duration', 'timespentminutes']));
 
           let depart = '';
           if (rawDep) {
@@ -923,36 +951,43 @@ export default function App() {
           }
 
           // Mode detection
-          const rawMode = (r['travel mode'] || r.travelmode || r.mode || '').toLowerCase();
+          const rawMode = (getField(['travelmode', 'mode']) || '').toLowerCase();
           let travelMode: TransitMode = 'drive';
           if (['drive', 'hike', 'bike', 'fly'].includes(rawMode)) {
             travelMode = rawMode as TransitMode;
-          } else if (destination.toLowerCase().includes('flight') || destination.toLowerCase().includes('airport')) {
+          } else if (destination.toLowerCase().includes('flight') || destination.toLowerCase().includes('gate') || destination.toLowerCase().includes('airport')) {
             travelMode = 'fly';
           } else if (destination.toLowerCase().includes('trail') || destination.toLowerCase().includes('hike')) {
             travelMode = 'hike';
           }
 
           // Activity detection
-          const rawType = (r['activity type'] || r.activitytype || r.type || '').toLowerCase();
+          const rawType = (getField(['activitytype', 'type']) || '').toLowerCase();
           let activityType: ActivityType = 'sightseeing';
-          const combined = `${destination} ${r['destination notes'] || r.notes || ''}`.toLowerCase();
+          const combined = `${destination} ${getField(['notes', 'destinationnotes'])}`.toLowerCase();
           if (['lodging', 'sightseeing', 'hiking', 'food', 'driving'].includes(rawType)) {
             activityType = rawType as ActivityType;
-          } else if (combined.includes('hostel') || combined.includes('hotel') || combined.includes('resort') || combined.includes('pool')) {
+          } else if (combined.includes('hotel') || combined.includes('hostel') || combined.includes('lodging') || combined.includes('bivvi')) {
             activityType = 'lodging';
-          } else if (combined.includes('waterfall') || combined.includes('trail') || combined.includes('falls') || combined.includes('cañon')) {
-            activityType = 'hiking';
-          } else if (combined.includes('coffee') || combined.includes('bakery') || combined.includes('pastries') || combined.includes('breakfast')) {
+          } else if (combined.includes('flight') || combined.includes('gate') || combined.includes('shuttle') || combined.includes('drive')) {
+            activityType = 'driving';
+          } else if (combined.includes('coffee') || combined.includes('bakery') || combined.includes('cafe')) {
             activityType = 'food';
           }
 
-          const notes = (r['destination notes'] || r.notes || r.description || '').trim();
-          const insights = r.insights ? r.insights.split(/[|;]/).map((s) => s.trim()) : [];
-          const rawHardTime = (r['hard time'] || r.hardtime || 'none').toLowerCase();
+          const notes = (getField(['notes', 'destinationnotes', 'description']) || '').trim();
+          const rawInsights = getField(['insights']);
+          const insights = rawInsights ? rawInsights.split(/[|;]/).map((s) => s.trim()) : [];
+
+          const rawTags = getField(['tags']);
+          const tags = rawTags ? rawTags.split(/[,|;]/).map((t) => t.trim()) : [activityType.toUpperCase()];
+
+          const rawHardTime = (getField(['hardtime', 'hardtimes']) || 'none').toLowerCase();
           const hardTime: HardTimeOption = ['none', 'arrival', 'departure'].includes(rawHardTime)
             ? (rawHardTime as HardTimeOption)
             : 'none';
+
+          const image = getField(['image', 'img']) || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80';
 
           return {
             id: `stop-${date}-${i}`,
@@ -966,8 +1001,8 @@ export default function App() {
             activityType,
             notes,
             insights,
-            tags: [activityType.toUpperCase()],
-            image: r.image || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80',
+            tags,
+            image,
             hardTime,
           };
         });
@@ -987,7 +1022,6 @@ export default function App() {
     }
   };
 
-  // Clears state and stores empty array in localStorage to prevent restoring INITIAL_DATA on reload
   const handleConfirmClearItinerary = () => {
     setItinerary([]);
     setSelectedItem(null);
@@ -995,10 +1029,9 @@ export default function App() {
     setShowSettingsModal(false);
   };
 
-  // Resets to built-in Colorado defaults
   const handleRestoreDefaults = () => {
     setItinerary(INITIAL_DATA);
-    setSelectedDate('2025-09-23');
+    setSelectedDate('2026-09-23');
     setShowSettingsModal(false);
   };
 
@@ -1019,7 +1052,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* STREAMLINED TOP HEADER */}
+        {/* Top Header */}
         <div className="px-5 pt-2 pb-3 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2.5">
@@ -1139,7 +1172,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* OVERLAP BANNER */}
+        {/* Overlap Warning Banner */}
         {overlaps.length > 0 && (
           <div className="mx-4 mb-2 bg-rose-50 border border-rose-200/90 rounded-2xl p-2.5 flex items-center justify-between text-xs text-rose-800 shadow-xs animate-fade-in">
             <div className="flex items-center space-x-2 min-w-0">
@@ -1158,10 +1191,10 @@ export default function App() {
           </div>
         )}
 
-        {/* MAIN SCROLLABLE CONTENT */}
+        {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto relative bg-[#F4F6F0] px-4 pb-24">
           
-          {/* EMPTY STATE */}
+          {/* Empty State */}
           {currentDayItems.length === 0 && (
             <div className="pt-12 text-center space-y-4 px-6">
               <div className="w-16 h-16 bg-white rounded-3xl mx-auto flex items-center justify-center text-slate-400 border border-slate-200 shadow-sm">
@@ -1170,7 +1203,7 @@ export default function App() {
               <div>
                 <h3 className="font-bold text-slate-800 text-base">No Stops in Itinerary</h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  Your trip schedule is empty. You can sync from Google Sheets, add a new waypoint, or restore the Colorado tour defaults.
+                  Your trip schedule is empty. You can sync from Google Sheets, add a new waypoint, or restore the Colorado tour defaults[cite: 1].
                 </p>
               </div>
               <div className="flex flex-col gap-2 pt-2">
@@ -1191,7 +1224,7 @@ export default function App() {
             </div>
           )}
 
-          {/* VIEW 1: ITINERARY CARDS */}
+          {/* View 1: Itinerary Cards */}
           {activeTab === 'itinerary' && currentDayItems.length > 0 && (
             <div className="space-y-1.5 pt-1">
               <div className="flex items-center justify-between text-xs px-1 text-slate-500 font-semibold mb-2">
@@ -1208,14 +1241,14 @@ export default function App() {
                 const transitMeta = getTransitMeta(item.travelMode);
                 const TransitIcon = transitMeta.icon;
 
-                // Proportional bar calculation
+                // Proportional duration bar
                 const maxScale = 90;
                 const travelPct = Math.min(50, (travelMin / maxScale) * 100);
                 const stayPct = Math.min(100 - travelPct, (durationMin / maxScale) * 100);
 
                 return (
                   <React.Fragment key={item.id}>
-                    {/* INTER-CARD TRAVEL CONNECTOR */}
+                    {/* Inter-card travel indicator */}
                     {index > 0 && travelMin > 0 && (
                       <div className="flex items-center space-x-2 py-1 pl-7 text-slate-600 text-xs font-medium">
                         <div className="w-0.5 h-6 bg-slate-300 ml-1.5 rounded-full"></div>
@@ -1228,7 +1261,7 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* MAIN WAYPOINT CARD */}
+                    {/* Main Card */}
                     <div
                       onClick={() => setSelectedItem(item)}
                       className={`p-3.5 rounded-2xl bg-white border transition-all cursor-pointer shadow-xs hover:shadow-md group ${
@@ -1238,7 +1271,6 @@ export default function App() {
                       }`}
                     >
                       <div className="flex items-start gap-3.5">
-                        {/* Left Block: Thumbnail with fallback to Activity Icon */}
                         <div
                           className={`w-13 h-13 sm:w-14 sm:h-14 rounded-2xl shrink-0 overflow-hidden flex items-center justify-center relative ${meta.bgSoft}`}
                         >
@@ -1261,9 +1293,7 @@ export default function App() {
                           )}
                         </div>
 
-                        {/* Middle & Right Content */}
                         <div className="flex-1 min-w-0">
-                          {/* Time Range & Chevron */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-1.5">
                               <span className="font-bold text-slate-800 text-sm tracking-tight">
@@ -1278,17 +1308,14 @@ export default function App() {
                             <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-500 transition shrink-0" />
                           </div>
 
-                          {/* Destination Title */}
                           <h3 className="font-bold text-slate-900 text-base leading-tight mt-0.5 truncate">
                             {item.destination}
                           </h3>
 
-                          {/* Address / Location */}
                           <p className="text-xs text-slate-500 truncate mt-0.5">
                             {item.address || 'Colorado Byway'}
                           </p>
 
-                          {/* Activity Badge + Duration Here */}
                           <div className="flex items-center space-x-2.5 text-xs text-slate-600 font-medium mt-2">
                             <span
                               className={`text-[10px] font-bold px-2 py-0.5 rounded-md tracking-wider uppercase border border-current/15 ${meta.bgSoft} ${meta.iconColor}`}
@@ -1302,7 +1329,6 @@ export default function App() {
                             </div>
                           </div>
 
-                          {/* Dual-colored Mini Gantt Bar */}
                           <div className="w-full bg-[#EBEBEB] rounded-full h-1.5 mt-2.5 overflow-hidden flex">
                             {travelMin > 0 && (
                               <div
@@ -1316,7 +1342,6 @@ export default function App() {
                             />
                           </div>
 
-                          {/* Overlap notice */}
                           {isConflict && (
                             <div className="mt-2 text-[11px] font-bold text-rose-600 flex items-center space-x-1">
                               <AlertTriangle className="w-3 h-3" />
@@ -1332,7 +1357,7 @@ export default function App() {
             </div>
           )}
 
-          {/* VIEW 2: GANTT TIMELINE VIEW */}
+          {/* View 2: Timeline Gantt */}
           {activeTab === 'gantt' && currentDayItems.length > 0 && (
             <div className="pt-2 select-none">
               <div
@@ -1353,7 +1378,7 @@ export default function App() {
                 )}
 
                 {/* Hour Grid Lines */}
-                {Array.from({ length: 10 }).map((_, idx) => {
+                {Array.from({ length: 13 }).map((_, idx) => {
                   const hour = 6 + idx;
                   const minuteVal = hour * 60;
                   const topPos = minToPx(minuteVal);
@@ -1373,21 +1398,7 @@ export default function App() {
                   );
                 })}
 
-                {/* Live Current Time Marker */}
-                {settings.showLiveTimeline && activeDate === '2025-09-23' && (
-                  <div
-                    className="absolute left-0 right-0 z-15 flex items-center pointer-events-none"
-                    style={{ top: `${minToPx(9 * 60 + 41)}px` }}
-                  >
-                    <div className="bg-[#234E42] text-white font-bold text-[10px] px-2 py-0.5 rounded-r-md shadow-md flex items-center space-x-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                      <span>9:41 AM Live</span>
-                    </div>
-                    <div className="flex-1 h-0.5 bg-[#234E42]"></div>
-                  </div>
-                )}
-
-                {/* Gantt Activity Blocks with transit-aware connectors */}
+                {/* Gantt Activities */}
                 {currentDayItems.map((item, index) => {
                   const itemArrival = toMinutes(item.arrivalTime);
                   const itemDepart = toMinutes(item.departTime);
@@ -1465,7 +1476,7 @@ export default function App() {
             </div>
           )}
 
-          {/* VIEW 3: SUMMARY VIEW */}
+          {/* View 3: Summary Metrics */}
           {activeTab === 'summary' && currentDayItems.length > 0 && (
             <div className="pt-2 space-y-4">
               <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
@@ -1538,7 +1549,7 @@ export default function App() {
           )}
         </div>
 
-        {/* FLOATING ACTION BUTTON (+) */}
+        {/* Floating Action Button */}
         <button
           onClick={handleOpenAddModal}
           className="absolute right-4 bottom-16 z-30 w-13 h-13 rounded-full bg-[#234E42] text-white shadow-xl shadow-[#234E42]/40 hover:bg-[#1B3E34] active:scale-95 transition-all flex items-center justify-center cursor-pointer border-2 border-white"
@@ -1547,7 +1558,7 @@ export default function App() {
           <Plus className="w-7 h-7" />
         </button>
 
-        {/* BOTTOM NAVIGATION DOCK */}
+        {/* Bottom Navigation Dock */}
         <div className="bg-white border-t border-slate-200 px-6 py-2 flex items-center justify-around shrink-0 z-20">
           <button
             onClick={() => setActiveTab('itinerary')}
@@ -1588,9 +1599,7 @@ export default function App() {
           </button>
         </div>
 
-        {/* ======================================================== */}
-        {/* MODAL 1: ADD / EDIT WITH TRANSIT SELECTOR & SYNC         */}
-        {/* ======================================================== */}
+        {/* Modal 1: Add/Edit Modal */}
         {editingItem && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
@@ -1621,7 +1630,7 @@ export default function App() {
                     onChange={(e) =>
                       setEditingItem({ ...editingItem, destination: e.target.value })
                     }
-                    placeholder="e.g. Ouray Hot Springs Pool"
+                    placeholder="e.g. Park N Go Orlando"
                     className="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234E42] text-xs font-semibold text-slate-900"
                   />
                 </div>
@@ -1636,12 +1645,12 @@ export default function App() {
                     onChange={(e) =>
                       setEditingItem({ ...editingItem, address: e.target.value })
                     }
-                    placeholder="e.g. US-550, Red Mountain Pass, CO"
+                    placeholder="e.g. 8500 Peña Blvd, Denver, CO"
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#234E42] text-xs text-slate-900"
                   />
                 </div>
 
-                {/* TRANSIT MODE & TRAVEL TIME SECTION */}
+                {/* Transit Mode & Travel Time */}
                 <div className="bg-emerald-50/70 p-3.5 rounded-2xl border border-[#234E42]/20 space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="font-bold text-[#1E4238] flex items-center space-x-1.5">
@@ -1650,7 +1659,6 @@ export default function App() {
                     <span className="text-[10px] text-slate-500 font-medium">Select transit type</span>
                   </div>
 
-                  {/* 4 Transit Mode Buttons: Drive, Hike, Bike, Fly */}
                   <div className="grid grid-cols-4 gap-2">
                     {(
                       [
@@ -1682,7 +1690,6 @@ export default function App() {
                     })}
                   </div>
 
-                  {/* Travel Minutes Input */}
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-slate-700 font-bold">
                       {getTransitMeta(editingItem.travelMode).title} Time:
@@ -1691,7 +1698,7 @@ export default function App() {
                       <input
                         type="number"
                         min="0"
-                        max="360"
+                        max="720"
                         value={editingItem.travelMinutes !== undefined ? editingItem.travelMinutes : ''}
                         onChange={(e) => {
                           const val = parseInt(e.target.value, 10);
@@ -1704,7 +1711,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* BIDIRECTIONAL TIME SECTION */}
+                {/* Duration & Time Range */}
                 <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">
@@ -1861,7 +1868,7 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Hard Times Lock Option */}
+                {/* Hard Times Lock */}
                 <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="font-bold text-slate-800 flex items-center space-x-1.5">
@@ -1956,9 +1963,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ======================================================== */}
-        {/* MODAL 2: CARD DETAIL INSPECTION (Bottom Sheet)           */}
-        {/* ======================================================== */}
+        {/* Modal 2: Details Modal */}
         {selectedItem && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
@@ -1984,7 +1989,6 @@ export default function App() {
               </div>
 
               <div className="p-5 overflow-y-auto space-y-4 text-xs">
-                {/* Time, Duration & Transit Mode */}
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between">
                   <div>
                     <span className="text-slate-400 block text-[10px] uppercase font-semibold">Scheduled Window</span>
@@ -2073,9 +2077,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ======================================================== */}
-        {/* MODAL 3: SETTINGS & DISPLAY PREFERENCES                 */}
-        {/* ======================================================== */}
+        {/* Modal 3: Settings Modal */}
         {showSettingsModal && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
@@ -2168,9 +2170,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ======================================================== */}
-        {/* MODAL 4: GOOGLE SHEETS CSV SYNC MODAL                    */}
-        {/* ======================================================== */}
+        {/* Modal 4: Sheet Sync Modal */}
         {showSyncModal && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
@@ -2251,9 +2251,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ======================================================== */}
-        {/* MODAL 5: CLEAR ITINERARY CONFIRMATION MODAL             */}
-        {/* ======================================================== */}
+        {/* Modal 5: Clear Confirm */}
         {showClearConfirmModal && (
           <div className="fixed inset-0 z-60 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-5 space-y-4 border border-rose-100">
@@ -2264,7 +2262,7 @@ export default function App() {
               <div className="text-center">
                 <h3 className="font-bold text-slate-900 text-base">Clear Entire Itinerary?</h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  Are you sure you want to remove all {itinerary.length} waypoints? You can re-sync from your Google Sheet or reload the Colorado defaults anytime.
+                  Are you sure you want to remove all {itinerary.length} waypoints? You can re-sync from your Google Sheet or reload the Colorado defaults anytime[cite: 1].
                 </p>
               </div>
 
@@ -2286,9 +2284,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ======================================================== */}
-        {/* MODAL 6: DATE PICKER DRAWER                              */}
-        {/* ======================================================== */}
+        {/* Modal 6: Calendar Day Picker */}
         {showCalendarPicker && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 space-y-4">
