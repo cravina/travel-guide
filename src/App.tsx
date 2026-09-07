@@ -1612,7 +1612,7 @@ export default function App() {
                         type="number"
                         min="1"
                         max="720"
-                        value={editingItem.timeSpentMinutes || ''}
+                        value={editingItem.timeSpentMinutes ?? ''}
                         onChange={(e) => {
                           const newSpent = parseInt(e.target.value, 10);
                           if (isNaN(newSpent) || newSpent < 1) {
