@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Calendar,
   Clock,
@@ -448,7 +448,7 @@ const normalizeTimeTo24h = (raw: string | undefined, fallback = '08:00'): string
   const str = raw.trim().toUpperCase();
   const ampmMatch = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
   if (ampmMatch) {
-    let h = parseInt(ampmMatch[1], 10);
+    let h = parseInt(ampmMatch, 10);
     const m = ampmMatch[2];
     const isPM = ampmMatch[3].toUpperCase() === 'PM';
     if (isPM && h < 12) h += 12;
@@ -457,7 +457,7 @@ const normalizeTimeTo24h = (raw: string | undefined, fallback = '08:00'): string
   }
   const standardMatch = str.match(/^(\d{1,2}):(\d{2})/);
   if (standardMatch) {
-    const h = parseInt(standardMatch[1], 10);
+    const h = parseInt(standardMatch, 10);
     const m = standardMatch[2];
     return `${h.toString().padStart(2, '0')}:${m}`;
   }
@@ -470,7 +470,7 @@ const parseMinutesFlexible = (raw: string | number | undefined): number => {
   const str = raw.toString().trim();
   if (str.includes(':')) {
     const parts = str.split(':').map(Number);
-    if (parts.length >= 2) return (parts[0] || 0) * 60 + (parts[1] || 0);
+    if (parts.length >= 2) return (parts[0] || 0) * 60 + (parts || 0);
   }
   const num = parseInt(str.replace(/[^0-9]/g, ''), 10);
   return isNaN(num) ? 0 : num;
@@ -485,7 +485,7 @@ const normalizeDateToISO = (raw: string, fallbackYear = 2026): string => {
 
   const slashMatch = str.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
   if (slashMatch) {
-    const month = parseInt(slashMatch[1], 10).toString().padStart(2, '0');
+    const month = parseInt(slashMatch, 10).toString().padStart(2, '0');
     const day = parseInt(slashMatch[2], 10).toString().padStart(2, '0');
     let year = slashMatch[3] ? parseInt(slashMatch[3], 10) : fallbackYear;
     if (year < 100) year += 2000;
@@ -527,64 +527,43 @@ function parseCSV(text: string): Record<string, string>[] {
 }
 
 export default function App() {
-  // 1. Persisted Itinerary State
+  // 1. Persisted Itinerary State with standard localStorage lazy initialization
   const [itinerary, setItinerary] = useState<ItineraryItem[]>(() => {
     try {
       const saved = localStorage.getItem(ITINERARY_STORAGE_KEY);
-      if (saved !== null) {
+      if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
       }
     } catch (e) {
-      console.error('Error reading localStorage for itinerary', e);
+      console.error('Error loading itinerary from localStorage', e);
     }
     return INITIAL_DATA;
   });
 
-  // Guard flag to prevent React 18 StrictMode mount from overwriting saved localStorage
-  const isItineraryInitialized = useRef(false);
-
-  useEffect(() => {
-    if (!isItineraryInitialized.current) {
-      isItineraryInitialized.current = true;
-      return;
-    }
-    try {
-      localStorage.setItem(ITINERARY_STORAGE_KEY, JSON.stringify(itinerary));
-    } catch (err) {
-      console.error('Failed to save itinerary to localStorage', err);
-    }
-  }, [itinerary]);
-
   // 2. Persisted Sheet URL State
   const [sheetUrl, setSheetUrl] = useState<string>(() => {
     try {
-      return localStorage.getItem(SHEET_URL_STORAGE_KEY) || DEFAULT_SHEET_CSV_URL;
-    } catch {
-      return DEFAULT_SHEET_CSV_URL;
+      const saved = localStorage.getItem(SHEET_URL_STORAGE_KEY);
+      if (saved) return saved;
+    } catch (e) {
+      console.error('Error loading sheet URL from localStorage', e);
     }
+    return DEFAULT_SHEET_CSV_URL;
   });
-
-  const isSheetUrlInitialized = useRef(false);
-
-  useEffect(() => {
-    if (!isSheetUrlInitialized.current) {
-      isSheetUrlInitialized.current = true;
-      return;
-    }
-    try {
-      localStorage.setItem(SHEET_URL_STORAGE_KEY, sheetUrl);
-    } catch (err) {
-      console.error('Failed to save sheet URL to localStorage', err);
-    }
-  }, [sheetUrl]);
 
   // 3. Persisted Settings State
   const [settings, setSettings] = useState<AppSettings>(() => {
     try {
       const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      if (saved !== null) return JSON.parse(saved);
-    } catch {}
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Error loading settings from localStorage', e);
+    }
     return {
       preferImagesInCards: true,
       cascadeDownstream: true,
@@ -593,13 +572,24 @@ export default function App() {
     };
   });
 
-  const isSettingsInitialized = useRef(false);
+  // Automatically keep localStorage in sync when state updates
+  useEffect(() => {
+    try {
+      localStorage.setItem(ITINERARY_STORAGE_KEY, JSON.stringify(itinerary));
+    } catch (err) {
+      console.error('Failed to save itinerary to localStorage', err);
+    }
+  }, [itinerary]);
 
   useEffect(() => {
-    if (!isSettingsInitialized.current) {
-      isSettingsInitialized.current = true;
-      return;
+    try {
+      localStorage.setItem(SHEET_URL_STORAGE_KEY, sheetUrl);
+    } catch (err) {
+      console.error('Failed to save sheet URL to localStorage', err);
     }
+  }, [sheetUrl]);
+
+  useEffect(() => {
     try {
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
     } catch (err) {
@@ -898,7 +888,7 @@ export default function App() {
     setItinerary((prev) => cascadeSchedule(resolvedItem, prev));
   };
 
-  // Google Sheets CSV Importer
+  // Google Sheets CSV Importer with immediate localStorage write
   const handleSyncFromSheet = async () => {
     if (!sheetUrl.trim()) return;
     setIsSyncing(true);
@@ -1010,6 +1000,12 @@ export default function App() {
       if (parsedStops.length > 0) {
         setItinerary(parsedStops);
         setSelectedDate(parsedStops[0].date);
+        try {
+          localStorage.setItem(ITINERARY_STORAGE_KEY, JSON.stringify(parsedStops));
+          localStorage.setItem(SHEET_URL_STORAGE_KEY, sheetUrl.trim());
+        } catch (e) {
+          console.error('Failed to immediately persist synced itinerary to localStorage', e);
+        }
         setSyncFeedback({ type: 'success', message: `Synced ${parsedStops.length} stops from Google Sheet!` });
       } else {
         setSyncFeedback({ type: 'error', message: 'No valid itinerary rows identified in sheet.' });
@@ -1025,6 +1021,11 @@ export default function App() {
   const handleConfirmClearItinerary = () => {
     setItinerary([]);
     setSelectedItem(null);
+    try {
+      localStorage.setItem(ITINERARY_STORAGE_KEY, JSON.stringify([]));
+    } catch (e) {
+      console.error('Failed to clear itinerary from localStorage', e);
+    }
     setShowClearConfirmModal(false);
     setShowSettingsModal(false);
   };
@@ -1032,6 +1033,11 @@ export default function App() {
   const handleRestoreDefaults = () => {
     setItinerary(INITIAL_DATA);
     setSelectedDate('2026-09-23');
+    try {
+      localStorage.setItem(ITINERARY_STORAGE_KEY, JSON.stringify(INITIAL_DATA));
+    } catch (e) {
+      console.error('Failed to restore defaults in localStorage', e);
+    }
     setShowSettingsModal(false);
   };
 
@@ -1203,7 +1209,7 @@ export default function App() {
               <div>
                 <h3 className="font-bold text-slate-800 text-base">No Stops in Itinerary</h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  Your trip schedule is empty. You can sync from Google Sheets, add a new waypoint, or restore the Colorado tour defaults[cite: 1].
+                  Your trip schedule is empty. You can sync from Google Sheets, add a new waypoint, or restore the Colorado tour defaults.
                 </p>
               </div>
               <div className="flex flex-col gap-2 pt-2">
@@ -2262,7 +2268,7 @@ export default function App() {
               <div className="text-center">
                 <h3 className="font-bold text-slate-900 text-base">Clear Entire Itinerary?</h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  Are you sure you want to remove all {itinerary.length} waypoints? You can re-sync from your Google Sheet or reload the Colorado defaults anytime[cite: 1].
+                  Are you sure you want to remove all {itinerary.length} waypoints? You can re-sync from your Google Sheet or reload the Colorado defaults anytime.
                 </p>
               </div>
 
