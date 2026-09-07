@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Calendar,
   Clock,
@@ -527,101 +527,85 @@ function parseCSV(text: string): Record<string, string>[] {
 }
 
 export default function App() {
-  // Persistence note: this artifact runtime does not support localStorage/sessionStorage
-  // (they silently fail to persist across reloads), so all three of these are persisted
-  // through window.storage instead — Claude's built-in cross-session key/value store.
-
   // 1. Persisted Itinerary State
-  const [itinerary, setItinerary] = useState<ItineraryItem[]>(INITIAL_DATA);
-
-  // 2. Persisted Sheet URL State
-  const [sheetUrl, setSheetUrl] = useState<string>(DEFAULT_SHEET_CSV_URL);
-
-  // 3. Persisted Settings State
-  const [settings, setSettings] = useState<AppSettings>({
-    preferImagesInCards: true,
-    cascadeDownstream: true,
-    showSunriseSunset: true,
-    showLiveTimeline: true,
+  const [itinerary, setItinerary] = useState<ItineraryItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(ITINERARY_STORAGE_KEY);
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.error('Error reading localStorage for itinerary', e);
+    }
+    return INITIAL_DATA;
   });
 
-  // Becomes true once the initial load from window.storage has finished (whether or not
-  // saved data was found). Every save effect below is gated on this so we never write the
-  // fallback defaults over real saved data before it's had a chance to load in.
-  const [isStorageLoaded, setIsStorageLoaded] = useState(false);
+  // Guard flag to prevent React 18 StrictMode mount from overwriting saved localStorage
+  const isItineraryInitialized = useRef(false);
 
-  // One-time load of all three keys on mount.
   useEffect(() => {
-    let cancelled = false;
-
-    async function safeGet(key: string): Promise<string | null> {
-      try {
-        const result = await window.storage.get(key, false);
-        return result ? result.value : null;
-      } catch {
-        // Missing key throws rather than returning null in this API — treat as "not saved yet".
-        return null;
-      }
+    if (!isItineraryInitialized.current) {
+      isItineraryInitialized.current = true;
+      return;
     }
+    try {
+      localStorage.setItem(ITINERARY_STORAGE_KEY, JSON.stringify(itinerary));
+    } catch (err) {
+      console.error('Failed to save itinerary to localStorage', err);
+    }
+  }, [itinerary]);
 
-    (async () => {
-      const [savedItinerary, savedSheetUrl, savedSettings] = await Promise.all([
-        safeGet(ITINERARY_STORAGE_KEY),
-        safeGet(SHEET_URL_STORAGE_KEY),
-        safeGet(SETTINGS_STORAGE_KEY),
-      ]);
+  // 2. Persisted Sheet URL State
+  const [sheetUrl, setSheetUrl] = useState<string>(() => {
+    try {
+      return localStorage.getItem(SHEET_URL_STORAGE_KEY) || DEFAULT_SHEET_CSV_URL;
+    } catch {
+      return DEFAULT_SHEET_CSV_URL;
+    }
+  });
 
-      if (cancelled) return;
+  const isSheetUrlInitialized = useRef(false);
 
-      if (savedItinerary !== null) {
-        try {
-          const parsed = JSON.parse(savedItinerary);
-          if (Array.isArray(parsed)) setItinerary(parsed);
-        } catch (e) {
-          console.error('Error parsing saved itinerary', e);
-        }
-      }
+  useEffect(() => {
+    if (!isSheetUrlInitialized.current) {
+      isSheetUrlInitialized.current = true;
+      return;
+    }
+    try {
+      localStorage.setItem(SHEET_URL_STORAGE_KEY, sheetUrl);
+    } catch (err) {
+      console.error('Failed to save sheet URL to localStorage', err);
+    }
+  }, [sheetUrl]);
 
-      if (savedSheetUrl !== null) {
-        setSheetUrl(savedSheetUrl);
-      }
-
-      if (savedSettings !== null) {
-        try {
-          setSettings(JSON.parse(savedSettings));
-        } catch (e) {
-          console.error('Error parsing saved settings', e);
-        }
-      }
-
-      setIsStorageLoaded(true);
-    })();
-
-    return () => {
-      cancelled = true;
+  // 3. Persisted Settings State
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    try {
+      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (saved !== null) return JSON.parse(saved);
+    } catch {}
+    return {
+      preferImagesInCards: true,
+      cascadeDownstream: true,
+      showSunriseSunset: true,
+      showLiveTimeline: true,
     };
-  }, []);
+  });
+
+  const isSettingsInitialized = useRef(false);
 
   useEffect(() => {
-    if (!isStorageLoaded) return;
-    window.storage.set(ITINERARY_STORAGE_KEY, JSON.stringify(itinerary), false).catch((err) => {
-      console.error('Failed to save itinerary', err);
-    });
-  }, [itinerary, isStorageLoaded]);
-
-  useEffect(() => {
-    if (!isStorageLoaded) return;
-    window.storage.set(SHEET_URL_STORAGE_KEY, sheetUrl, false).catch((err) => {
-      console.error('Failed to save sheet URL', err);
-    });
-  }, [sheetUrl, isStorageLoaded]);
-
-  useEffect(() => {
-    if (!isStorageLoaded) return;
-    window.storage.set(SETTINGS_STORAGE_KEY, JSON.stringify(settings), false).catch((err) => {
-      console.error('Failed to save settings', err);
-    });
-  }, [settings, isStorageLoaded]);
+    if (!isSettingsInitialized.current) {
+      isSettingsInitialized.current = true;
+      return;
+    }
+    try {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    } catch (err) {
+      console.error('Failed to save settings to localStorage', err);
+    }
+  }, [settings]);
 
   const [selectedDate, setSelectedDate] = useState<string>('2026-09-18');
   const [activeTab, setActiveTab] = useState<'itinerary' | 'gantt' | 'summary'>('itinerary');
@@ -1050,17 +1034,6 @@ export default function App() {
     setSelectedDate('2026-09-23');
     setShowSettingsModal(false);
   };
-
-  if (!isStorageLoaded) {
-    return (
-      <div className="min-h-screen bg-[#E5E9E2] flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-3 text-[#234E42]">
-          <RefreshCw className="w-8 h-8 animate-spin" />
-          <span className="text-sm font-bold">Loading your itinerary...</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#E5E9E2] text-slate-900 flex justify-center p-0 sm:p-4 font-sans antialiased selection:bg-[#234E42] selection:text-white">
