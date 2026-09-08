@@ -371,7 +371,6 @@ const DEFAULT_SHEET_CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnbvJS7yfpExgR8hWefk4FJWaeRyh52q03uZs7hopOvFnsJoveg8O_FUYPABojI9Fn0bjRSySwdoyY/pub?gid=1559519314&single=true&output=csv';
 
 const KNOWN_SUN_DATA: Record<string, SunData> = {
-  '2026-09-07': { label: 'Mon, Sep 7', sunrise: '7:03 AM', sunset: '7:36 PM', sunriseMin: 380, sunsetMin: 1153 },
   '2026-09-18': { label: 'Fri, Sep 18', sunrise: '6:20 AM', sunset: '7:13 PM', sunriseMin: 380, sunsetMin: 1153 },
   '2026-09-19': { label: 'Sat, Sep 19', sunrise: '6:21 AM', sunset: '7:11 PM', sunriseMin: 381, sunsetMin: 1151 },
   '2026-09-20': { label: 'Sun, Sep 20', sunrise: '6:22 AM', sunset: '7:10 PM', sunriseMin: 382, sunsetMin: 1150 },
@@ -1220,7 +1219,7 @@ export default function App() {
                 </svg>
               </div>
               <span className="font-serif font-bold text-lg text-[#1E4238] tracking-tight">
-                Laag-Laag Dot Com
+                Laag Log
               </span>
             </div>
 
