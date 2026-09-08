@@ -1219,7 +1219,7 @@ export default function App() {
                 </svg>
               </div>
               <span className="font-serif font-bold text-lg text-[#1E4238] tracking-tight">
-                Laag Log
+                TravelSync
               </span>
             </div>
 
