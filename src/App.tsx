@@ -106,6 +106,7 @@ export interface SyncFeedback {
 const ITINERARY_STORAGE_KEY = 'trailsync_itinerary_data_v2';
 const SETTINGS_STORAGE_KEY = 'trailsync_settings_data_v2';
 const SHEET_URL_STORAGE_KEY = 'trailsync_sheet_url_v2';
+const SELECTED_DATE_STORAGE_KEY = 'trailsync_selected_date_v2';
 
 // Bed SVG Icon for lodging
 const BedIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -701,7 +702,23 @@ export default function App() {
     }
   }, [settings]);
 
-  const [selectedDate, setSelectedDate] = useState<string>('2026-09-18');
+  useEffect(() => {
+    try {
+      localStorage.setItem(SELECTED_DATE_STORAGE_KEY, selectedDate);
+    } catch (err) {
+      console.error('Failed to save selected date to localStorage', err);
+    }
+  }, [selectedDate]);
+
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(SELECTED_DATE_STORAGE_KEY);
+      if (saved) return saved;
+    } catch (e) {
+      console.error('Error loading selected date from localStorage', e);
+    }
+    return '2026-09-18';
+  });
   const [activeTab, setActiveTab] = useState<'itinerary' | 'gantt' | 'summary'>('itinerary');
   const [selectedItem, setSelectedItem] = useState<ItineraryItem | null>(null);
   const [editingItem, setEditingItem] = useState<ItineraryItem | null>(null);
