@@ -3,6 +3,7 @@ import {
   Calendar,
   Clock,
   MapPin,
+  Map,
   Plus,
   Edit3,
   AlertTriangle,
@@ -721,8 +722,8 @@ export default function App() {
       console.error('Failed to save selected date to localStorage', err);
     }
   }, [selectedDate]);
-  
-  const [activeTab, setActiveTab] = useState<'itinerary' | 'gantt' | 'summary'>('itinerary');
+
+  const [activeTab, setActiveTab] = useState<'itinerary' | 'gantt' | 'map' | 'summary'>('itinerary');
   const [selectedItem, setSelectedItem] = useState<ItineraryItem | null>(null);
   const [editingItem, setEditingItem] = useState<ItineraryItem | null>(null);
   const [isAddMode, setIsAddMode] = useState<boolean>(false);
@@ -1372,6 +1373,16 @@ export default function App() {
                   : 'bg-white border border-slate-200/80 text-slate-700 hover:bg-slate-50'
               }`}
             >
+              Map
+            </button>
+            <button
+              onClick={() => setActiveTab('summary')}
+              className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'summary'
+                  ? 'bg-[#234E42] text-white shadow-md shadow-[#234E42]/20'
+                  : 'bg-white border border-slate-200/80 text-slate-700 hover:bg-slate-50'
+              }`}
+            >
               Summary
             </button>
           </div>
@@ -1780,6 +1791,22 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {/* View 4: Interactive Map View */}
+          {activeTab === 'map' && (
+            <div className="pt-2 pb-6">
+              <div className="w-full h-[580px] sm:h-[640px] bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden relative">
+                <iframe
+                  src="https://www.google.com/maps/d/embed?mid=1YNBZCMf03K8PjA5ackxLgkpjWVGlZgI&ehbc=2E312F&noprof=1"
+                  width="100%"
+                  height="100%"
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                  title="Colorado Fall Adventure Map"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Floating Action Button */}
@@ -1811,6 +1838,16 @@ export default function App() {
           >
             <Layers className="w-5 h-5" />
             <span className="text-[10px]">Timeline</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('map')}
+            className={`flex flex-col items-center space-y-1 transition cursor-pointer ${
+              activeTab === 'map' ? 'text-[#234E42] font-bold' : 'text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <Map className="w-5 h-5" />
+            <span className="text-[10px]">Map</span>
           </button>
 
           <button
