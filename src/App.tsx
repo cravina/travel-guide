@@ -723,7 +723,7 @@ export default function App() {
     }
   }, [selectedDate]);
 
-  const [activeTab, setActiveTab] = useState<'itinerary' | 'gantt' | 'map' | 'summary'>('itinerary');
+  const [activeTab, setActiveTab] = useState<'itinerary' | 'gantt' | 'summary'>('itinerary');
   const [selectedItem, setSelectedItem] = useState<ItineraryItem | null>(null);
   const [editingItem, setEditingItem] = useState<ItineraryItem | null>(null);
   const [isAddMode, setIsAddMode] = useState<boolean>(false);
@@ -1364,6 +1364,16 @@ export default function App() {
               }`}
             >
               Timeline
+            </button>
+            <button
+              onClick={() => setActiveTab('map')}
+              className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'map'
+                  ? 'bg-[#234E42] text-white shadow-md shadow-[#234E42]/20'
+                  : 'bg-white border border-slate-200/80 text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              Map
             </button>
             <button
               onClick={() => setActiveTab('summary')}
