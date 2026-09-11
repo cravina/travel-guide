@@ -450,6 +450,14 @@ const formatDateLabel = (dateStr: string): string => {
   }
 };
 
+const [hasLoadedMap, setHasLoadedMap] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'map') {
+      setHasLoadedMap(true);
+    }
+  }, [activeTab]);
+
 const getSunDataForDate = (dateStr: string): SunData => {
   if (KNOWN_SUN_DATA[dateStr]) return KNOWN_SUN_DATA[dateStr];
   try {
@@ -1782,16 +1790,15 @@ export default function App() {
             </div>
           )}
 
-          {/* View 4: Interactive Map View */}
-          {activeTab === 'map' && (
-            <div className="pt-2 pb-6">
+          {/* View 4: Interactive Map View (Cached in DOM) */}
+          {hasLoadedMap && (
+            <div className={`pt-2 pb-6 ${activeTab === 'map' ? 'block' : 'hidden'}`}>
               <div className="w-full h-[580px] sm:h-[640px] bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden relative">
                 <iframe
                   src="https://www.google.com/maps/d/embed?mid=1YNBZCMf03K8PjA5ackxLgkpjWVGlZgI&ehbc=2E312F&noprof=1"
                   width="100%"
                   height="100%"
                   className="w-full h-full border-0"
-                  loading="lazy"
                   title="Colorado Fall Adventure Map"
                 />
               </div>
