@@ -728,18 +728,45 @@ export default function App() {
     return getSunDataForDate(activeDate);
   }, [activeDate]);
 
-  const timelineStartMin = 6 * 60;
-  const timelineEndMin = 18 * 60;
-  const totalTimelineMinutes = timelineEndMin - timelineStartMin;
-  const timelinePixelHeight = 720;
-  const minToPx = (m: number) => ((m - timelineStartMin) / totalTimelineMinutes) * timelinePixelHeight;
-
   // Filter items for selected day
   const currentDayItems = useMemo(() => {
     return itinerary
       .filter((item) => item.date === activeDate)
       .sort((a, b) => toMinutes(a.arrivalTime) - toMinutes(b.arrivalTime));
   }, [itinerary, activeDate]);
+
+  // Dynamic bounds: encompass all scheduled items with fallback to sunrise/sunset
+  const { startHour, endHour, timelineStartMin, timelineEndMin, totalTimelineMinutes, timelinePixelHeight } = useMemo(() => {
+    const itemTimes = currentDayItems.flatMap((it) => [
+      toMinutes(it.arrivalTime),
+      toMinutes(it.departTime),
+    ]);
+
+    const minMin = itemTimes.length > 0
+      ? Math.min(currentSun.sunriseMin, ...itemTimes)
+      : currentSun.sunriseMin;
+    const maxMin = itemTimes.length > 0
+      ? Math.max(currentSun.sunsetMin, ...itemTimes)
+      : currentSun.sunsetMin;
+
+    const startH = Math.max(0, Math.floor(minMin / 60));
+    const endH = Math.min(24, Math.ceil(maxMin / 60));
+    const startMin = startH * 60;
+    const endMin = endH * 60;
+    const totalMin = Math.max(60, endMin - startMin);
+    const pixelHeight = Math.max(720, totalMin);
+
+    return {
+      startHour: startH,
+      endHour: endH,
+      timelineStartMin: startMin,
+      timelineEndMin: endMin,
+      totalTimelineMinutes: totalMin,
+      timelinePixelHeight: pixelHeight,
+    };
+  }, [currentDayItems, currentSun]);
+
+  const minToPx = (m: number) => ((m - timelineStartMin) / totalTimelineMinutes) * timelinePixelHeight;
 
   const overlaps = useMemo<ScheduleConflict[]>(() => {
     const conflicts: ScheduleConflict[] = [];
@@ -1545,9 +1572,22 @@ export default function App() {
                   </div>
                 )}
 
+                {/* Sunset Shading */}
+                {settings.showSunriseSunset && currentSun.sunsetMin < timelineEndMin && (
+                  <div
+                    className="absolute left-0 right-0 bottom-0 bg-slate-950/10 border-t border-indigo-300 pointer-events-none z-1 flex items-start px-3 pt-1"
+                    style={{ top: `${minToPx(currentSun.sunsetMin)}px` }}
+                  >
+                    <span className="text-[10px] font-semibold text-indigo-800 bg-indigo-100 px-1.5 py-0.5 rounded flex items-center space-x-1">
+                      <Moon className="w-3 h-3 text-indigo-600" />
+                      <span>Sunset {currentSun.sunset}</span>
+                    </span>
+                  </div>
+                )}
+
                 {/* Hour Grid Lines */}
-                {Array.from({ length: 13 }).map((_, idx) => {
-                  const hour = 6 + idx;
+                {Array.from({ length: endHour - startHour + 1 }).map((_, idx) => {
+                  const hour = startHour + idx;
                   const minuteVal = hour * 60;
                   const topPos = minToPx(minuteVal);
                   if (minuteVal > timelineEndMin) return null;
@@ -1559,7 +1599,7 @@ export default function App() {
                       style={{ top: `${topPos}px` }}
                     >
                       <span className="text-[10px] font-bold text-slate-400 bg-white/95 px-2 py-0.5 ml-2 rounded">
-                        {hour > 12 ? `${hour - 12} PM` : hour === 12 ? '12 PM' : `${hour} AM`}
+                        {hour === 0 || hour === 24 ? '12 AM' : hour > 12 ? `${hour - 12} PM` : hour === 12 ? '12 PM' : `${hour} AM`}
                       </span>
                       <div className="flex-1 border-t border-dashed border-slate-200"></div>
                     </div>
