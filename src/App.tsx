@@ -750,7 +750,7 @@ export default function App() {
       : currentSun.sunsetMin;
 
     const startH = Math.max(0, Math.floor(minMin / 60));
-    const endH = Math.min(24, Math.ceil(maxMin / 60));
+    const endH = Math.min(24, Math.ceil(maxMin / 60) + 1);
     const startMin = startH * 60;
     const endMin = endH * 60;
     const totalMin = Math.max(60, endMin - startMin);
@@ -1554,7 +1554,7 @@ export default function App() {
 
           {/* View 2: Timeline Gantt */}
           {activeTab === 'gantt' && currentDayItems.length > 0 && (
-            <div className="pt-2 select-none">
+            <div className="pt-2 pb-12 select-none">
               <div
                 className="relative bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
                 style={{ height: `${timelinePixelHeight}px` }}
