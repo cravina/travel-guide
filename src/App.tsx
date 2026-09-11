@@ -1841,16 +1841,6 @@ export default function App() {
           </button>
 
           <button
-            onClick={() => setActiveTab('map')}
-            className={`flex flex-col items-center space-y-1 transition cursor-pointer ${
-              activeTab === 'map' ? 'text-[#234E42] font-bold' : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <Map className="w-5 h-5" />
-            <span className="text-[10px]">Map</span>
-          </button>
-
-          <button
             onClick={() => setActiveTab('summary')}
             className={`flex flex-col items-center space-y-1 transition cursor-pointer ${
               activeTab === 'summary' ? 'text-[#234E42] font-bold' : 'text-slate-400 hover:text-slate-600'
