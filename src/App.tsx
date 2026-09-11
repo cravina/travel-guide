@@ -107,7 +107,6 @@ export interface SyncFeedback {
 const ITINERARY_STORAGE_KEY = 'trailsync_itinerary_data_v2';
 const SETTINGS_STORAGE_KEY = 'trailsync_settings_data_v2';
 const SHEET_URL_STORAGE_KEY = 'trailsync_sheet_url_v2';
-//const SELECTED_DATE_STORAGE_KEY = 'trailsync_selected_date_v2';
 
 // Bed SVG Icon for lodging
 const BedIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -450,14 +449,6 @@ const formatDateLabel = (dateStr: string): string => {
   }
 };
 
-const [hasLoadedMap, setHasLoadedMap] = useState(false);
-
-  useEffect(() => {
-    if (activeTab === 'map') {
-      setHasLoadedMap(true);
-    }
-  }, [activeTab]);
-
 const getSunDataForDate = (dateStr: string): SunData => {
   if (KNOWN_SUN_DATA[dateStr]) return KNOWN_SUN_DATA[dateStr];
   try {
@@ -731,7 +722,15 @@ export default function App() {
     }
   }, [selectedDate]);
 
-  const [activeTab, setActiveTab] = useState<'itinerary' | 'gantt' | 'summary'>('itinerary');
+  const [activeTab, setActiveTab] = useState<'itinerary' | 'gantt' | 'map' | 'summary'>('itinerary');
+  const [hasLoadedMap, setHasLoadedMap] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'map') {
+      setHasLoadedMap(true);
+    }
+  }, [activeTab]);
+
   const [selectedItem, setSelectedItem] = useState<ItineraryItem | null>(null);
   const [editingItem, setEditingItem] = useState<ItineraryItem | null>(null);
   const [isAddMode, setIsAddMode] = useState<boolean>(false);
