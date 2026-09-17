@@ -378,10 +378,10 @@ const KNOWN_SUN_DATA: Record<string, SunData> = {
   '2026-09-21': { label: 'Mon, Sep 21', sunrise: '6:52 AM', sunset: '7:09 PM', sunriseMin: 412, sunsetMin: 1149 },
   '2026-09-22': { label: 'Tue, Sep 22', sunrise: '6:59 AM', sunset: '7:08 PM', sunriseMin: 419, sunsetMin: 1148 },
   '2026-09-23': { label: 'Wed, Sep 23', sunrise: '6:59 AM', sunset: '7:09 PM', sunriseMin: 419, sunsetMin: 1149 },
-  '2026-09-24': { label: 'Thu, Sep 24', sunrise: '7:02 AM', sunset: '7:05 PM', sunriseMin: 422, sunsetMin: 1145 },
-  '2026-09-25': { label: 'Fri, Sep 25', sunrise: '6:48 AM', sunset: '6:58 PM', sunriseMin: 408, sunsetMin: 1138 },
-  '2026-09-26': { label: 'Sat, Sep 26', sunrise: '6:49 AM', sunset: '6:51 PM', sunriseMin: 409, sunsetMin: 1131 },
-  '2026-09-27': { label: 'Sun, Sep 27', sunrise: '6:51 AM', sunset: '7:13 PM', sunriseMin: 411, sunsetMin: 1153 },
+  '2026-09-24': { label: 'Thu, Sep 24', sunrise: '7:02 AM', sunset: '6:58 PM', sunriseMin: 422, sunsetMin: 1145 },
+  '2026-09-25': { label: 'Fri, Sep 25', sunrise: '6:49 AM', sunset: '6:52 PM', sunriseMin: 408, sunsetMin: 1138 },
+  '2026-09-26': { label: 'Sat, Sep 26', sunrise: '6:51 AM', sunset: '6:51 PM', sunriseMin: 409, sunsetMin: 1131 },
+  '2026-09-27': { label: 'Sun, Sep 27', sunrise: '6:52 AM', sunset: '7:13 PM', sunriseMin: 411, sunsetMin: 1153 },
 };
 
 // Safe time-to-minutes converter supporting both "10:10 AM" and "10:10"
