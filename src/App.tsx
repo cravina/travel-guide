@@ -372,15 +372,16 @@ const DEFAULT_SHEET_CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnbvJS7yfpExgR8hWefk4FJWaeRyh52q03uZs7hopOvFnsJoveg8O_FUYPABojI9Fn0bjRSySwdoyY/pub?gid=1559519314&single=true&output=csv';
 
 const KNOWN_SUN_DATA: Record<string, SunData> = {
-  '2026-09-07': { label: 'Mon, Sep 7', sunrise: '7:03 AM', sunset: '7:36 PM', sunriseMin: 380, sunsetMin: 1153 },
-  '2026-09-18': { label: 'Fri, Sep 18', sunrise: '6:20 AM', sunset: '7:13 PM', sunriseMin: 380, sunsetMin: 1153 },
-  '2026-09-19': { label: 'Sat, Sep 19', sunrise: '6:21 AM', sunset: '7:11 PM', sunriseMin: 381, sunsetMin: 1151 },
-  '2026-09-20': { label: 'Sun, Sep 20', sunrise: '6:22 AM', sunset: '7:10 PM', sunriseMin: 382, sunsetMin: 1150 },
-  '2026-09-21': { label: 'Mon, Sep 21', sunrise: '6:22 AM', sunset: '7:08 PM', sunriseMin: 382, sunsetMin: 1148 },
-  '2026-09-22': { label: 'Tue, Sep 22', sunrise: '6:23 AM', sunset: '7:07 PM', sunriseMin: 383, sunsetMin: 1147 },
-  '2026-09-23': { label: 'Wed, Sep 23', sunrise: '6:23 AM', sunset: '7:08 PM', sunriseMin: 383, sunsetMin: 1148 },
-  '2026-09-24': { label: 'Thu, Sep 24', sunrise: '6:24 AM', sunset: '7:06 PM', sunriseMin: 384, sunsetMin: 1146 },
-  '2026-09-25': { label: 'Fri, Sep 25', sunrise: '6:25 AM', sunset: '7:05 PM', sunriseMin: 385, sunsetMin: 1145 },
+  '2026-09-18': { label: 'Fri, Sep 18', sunrise: '7:09 AM', sunset: '7:04 PM', sunriseMin: 429, sunsetMin: 1144 },
+  '2026-09-19': { label: 'Sat, Sep 19', sunrise: '6:45 AM', sunset: '7:03 PM', sunriseMin: 405, sunsetMin: 1143 },
+  '2026-09-20': { label: 'Sun, Sep 20', sunrise: '6:47 AM', sunset: '7:05 PM', sunriseMin: 407, sunsetMin: 1145 },
+  '2026-09-21': { label: 'Mon, Sep 21', sunrise: '6:52 AM', sunset: '7:09 PM', sunriseMin: 412, sunsetMin: 1149 },
+  '2026-09-22': { label: 'Tue, Sep 22', sunrise: '6:59 AM', sunset: '7:08 PM', sunriseMin: 419, sunsetMin: 1148 },
+  '2026-09-23': { label: 'Wed, Sep 23', sunrise: '6:59 AM', sunset: '7:09 PM', sunriseMin: 419, sunsetMin: 1149 },
+  '2026-09-24': { label: 'Thu, Sep 24', sunrise: '7:02 AM', sunset: '7:05 PM', sunriseMin: 422, sunsetMin: 1145 },
+  '2026-09-25': { label: 'Fri, Sep 25', sunrise: '6:48 AM', sunset: '6:58 PM', sunriseMin: 408, sunsetMin: 1138 },
+  '2026-09-26': { label: 'Sat, Sep 26', sunrise: '6:49 AM', sunset: '6:51 PM', sunriseMin: 409, sunsetMin: 1131 },
+  '2026-09-27': { label: 'Sun, Sep 27', sunrise: '6:51 AM', sunset: '7:13 PM', sunriseMin: 411, sunsetMin: 1153 },
 };
 
 // Safe time-to-minutes converter supporting both "10:10 AM" and "10:10"
